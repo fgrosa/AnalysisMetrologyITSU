@@ -33,10 +33,10 @@
 
 //_____________________________________________________________________________________________
 //GLOBAL VARIBALES
-const TString infile1 = "Stave4/STAVE_PADPOS_2018_7_2_T-OL-Stave-4completo_T-OL-HS-L4completo_ALC-0312-01_246_T-OL-HS-U-5completo_ALC-0312-01_210_RS222.txt"
-const TString infile2 = "Stave4/STAVE_PADPOS_2018_5_7_T-OL-Stave-4_T-OL-HS-L-4_ALC-0312-01_246_T-OL-HS-R-4_ALC-0312-01_210_RS222.txt";
+const TString infile1 = "STAVE4/STAVE_PADPOS_2018_5_7_T-OL-Stave-4_T-OL-HS-L-4_ALC-0312-01_246_T-OL-HS-R-4_ALC-0312-01_210_RS212.dat";
+const TString infile2 = "STAVE4/STAVE_PADPOS_2018_5_7_T-OL-Stave-4_T-OL-HS-L-4_ALC-0312-01_246_T-OL-HS-R-4_ALC-0312-01_210_RS222.dat";
 bool fMitutoyoFile=true;
-bool fChangeRS1=false;
+bool fChangeRS1=true;
 
 //_____________________________________________________________________________________________
 //FUNCTION PROTOTYPES
@@ -48,7 +48,7 @@ void SetStyle();
 
 //_____________________________________________________________________________________________
 int ComparePadPositions() {
-    
+
   SetStyle();
 
   std::vector<double> x_1;
@@ -57,7 +57,7 @@ int ComparePadPositions() {
   std::vector<double> x_2;
   std::vector<double> y_2;
   std::vector<double> z_2;
-  
+
   bool readMeas1=false;
   bool readMeas2=false;
   if(!fMitutoyoFile) {
@@ -65,8 +65,8 @@ int ComparePadPositions() {
     readMeas2=ReadFile(infile2,x_2,y_2,z_2);
   }
   else {
-    readMeas1=ReadDatFileMitutoyo(infile1,x_1,y_1,z_1);
-    readMeas2=ReadDatFileMitutoyo(infile2,x_2,y_2,z_2);
+    readMeas1=ReadDatFileMitutoyo(infile1,x_1,y_1,z_1);//read from 212
+    readMeas2=ReadDatFileMitutoyo(infile2,x_2,y_2,z_2);//read from 222
   }
   if(!readMeas1) {
     cerr << "Impossibile to find the input file1 for measured positions. Exit" << endl;
@@ -80,11 +80,11 @@ int ComparePadPositions() {
   //transform RS212 into RS222
   std::vector<double> x_1_tr;
   std::vector<double> z_1_tr;
-  for(unsigned int iEntry=0; iEntry<x_1.size(); iEntry++) {  
+  for(unsigned int iEntry=0; iEntry<x_1.size(); iEntry++) {
     x_1_tr.push_back(-x_1[iEntry]);
     z_1_tr.push_back(-z_1[iEntry]);
   }
-  
+
   std::vector<double> resx;
   std::vector<double> resy;
   TH1F* hResX = new TH1F("hResX",";#DeltaX (#mum);Counts",100,-100,100);
@@ -93,7 +93,7 @@ int ComparePadPositions() {
 
   //match measurements
   for(unsigned int iEntry1=0; iEntry1<x_1.size(); iEntry1++) {
-    for(unsigned int iEntry2=0; iEntry2<x_2.size(); iEntry2++) {  
+    for(unsigned int iEntry2=0; iEntry2<x_2.size(); iEntry2++) {
       bool match = false;
       if(fChangeRS1) match = MatchMeas(x_1_tr[iEntry1],y_1[iEntry1],x_2[iEntry2],y_2[iEntry2],1.);
       else match = MatchMeas(x_1[iEntry1],y_1[iEntry1],x_2[iEntry2],y_2[iEntry2],1.);
@@ -101,18 +101,20 @@ int ComparePadPositions() {
         if(fChangeRS1) {
           resx.push_back(x_1_tr[iEntry1]-x_2[iEntry2]);
           hResX->Fill((x_1_tr[iEntry1]-x_2[iEntry2])*1000);
+            hResZ->Fill((z_1_tr[iEntry1]-z_2[iEntry2])*1000);
         }
         else {
           resx.push_back(x_1[iEntry1]-x_2[iEntry2]);
           hResX->Fill((x_1[iEntry1]-x_2[iEntry2])*1000);
+            hResZ->Fill((z_1[iEntry1]-z_2[iEntry2])*1000);
         }
         resy.push_back(y_1[iEntry1]-y_2[iEntry2]);
         hResY->Fill((y_1[iEntry1]-y_2[iEntry2])*1000);
-        hResZ->Fill((z_1[iEntry1]-z_2[iEntry2])*1000);
+
       }
     }
   }
-  
+
   TString title1 = "RS222";
   TString title2 = "RS212";
   TString title3 = "RS212 reversed";
@@ -155,12 +157,12 @@ int ComparePadPositions() {
 
   int point_up = 0;
   int point_down = 0;
-  for(unsigned int iEntry1=0; iEntry1<x_1.size(); iEntry1++) {  
+  for(unsigned int iEntry1=0; iEntry1<x_1.size(); iEntry1++) {
     if(z_1[iEntry1]>-10.5 && fChangeRS1) {
       gZ1_Up->SetPoint(point_up,y_1[iEntry1],z_1[iEntry1]);
       gZ1rev_Up->SetPoint(point_up,y_1[iEntry1],z_1_tr[iEntry1]);
       point_up++;
-    }  
+    }
     else if(z_1[iEntry1]<-10.5 && fChangeRS1){
       gZ1_Down->SetPoint(point_down,y_1[iEntry1],z_1[iEntry1]);
       gZ1rev_Down->SetPoint(point_down,y_1[iEntry1],z_1_tr[iEntry1]);
@@ -179,7 +181,7 @@ int ComparePadPositions() {
   }
   point_up = 0;
   point_down = 0;
-  for(unsigned int iEntry2=0; iEntry2<x_2.size(); iEntry2++) {  
+  for(unsigned int iEntry2=0; iEntry2<x_2.size(); iEntry2++) {
     if(z_2[iEntry2]>12.5) {
       gZ2_Up->SetPoint(point_up,y_2[iEntry2],z_2[iEntry2]);
       point_up++;
@@ -189,7 +191,7 @@ int ComparePadPositions() {
       point_down++;
     }
   }
-  
+
   TCanvas* cRes = new TCanvas("cRes","",1200,600);
   cRes->Divide(3,1);
   cRes->cd(1);
@@ -211,7 +213,7 @@ int ComparePadPositions() {
   TH2F* h2FrameNeg = new TH2F("h2FramePos",Form("%s;y (mm);z (mm)",title2.Data()),1000,-1000,1000,100,-15,-9);
   h2FrameNeg->SetStats(0);
   h2FrameNeg->SetNdivisions(505);
-  
+
   TF1* fZ1_Up = new TF1("fZ1_Up","pol2",-1000,1000);
   TF1* fZ1_Down = new TF1("fZ1_Down","pol2",-1000,1000);
   TF1* fZ1rev_Up = new TF1("fZ1rev_Up","pol2",-1000,1000);
@@ -236,7 +238,7 @@ int ComparePadPositions() {
   gZ2_Down->Draw("P");
   cZVsY->cd(3);
 
-  h2FramePos2->Draw();  
+  h2FramePos2->Draw();
   gZ2_Up->Draw("P");
   gZ2_Up->Fit("fZ2_Up");
   gZ2_Down->Draw("P");
@@ -245,7 +247,7 @@ int ComparePadPositions() {
   gZ1rev_Up->Fit("fZ1rev_Up");
   gZ1rev_Down->Draw("P");
   gZ1rev_Down->Fit("fZ1rev_Down");
-  
+
   TString outfilename = infile1;
   outfilename.ReplaceAll("RS202","ResXYZ");
   outfilename.ReplaceAll("RS203","ResXYZ");
@@ -256,7 +258,7 @@ int ComparePadPositions() {
   cRes->SaveAs(outfilename.Data());
   outfilename.ReplaceAll("ResXYZ","Zprofile");
   cZVsY->SaveAs(outfilename.Data());
-  
+
   return 0;
 }
 
@@ -290,14 +292,14 @@ bool ReadDatFileMitutoyo(TString FileName, std::vector<double>& x, std::vector<d
     cerr << "Wrong file format. Exit." << endl;
     return false;
   }
-  
+
   string valueSeparator = ";";
   ifstream inSet(FileName.Data());
   if(!inSet) {
     cerr<<"Please check if "<<FileName.Data() <<" is the right path. Exit."<<endl;
     return false;
   }
-  
+
   bool islineok=true;
   int linecounter=0;
   if (inSet.is_open()) {
@@ -308,7 +310,7 @@ bool ReadDatFileMitutoyo(TString FileName, std::vector<double>& x, std::vector<d
       string line;
       getline(inSet, line);
       TString test = line;
-      if(test.Contains("Gauss") || test.Contains("Mean") || linecounter>0) {
+      if(test.Contains("Mean") || linecounter>0) {
         islineok=false;
         linecounter++;
       }
@@ -317,7 +319,7 @@ bool ReadDatFileMitutoyo(TString FileName, std::vector<double>& x, std::vector<d
         islineok=true;
       }
       if(test.Contains("MarkerCenter")) {islineok=false;}
-      
+
       if(islineok && linecounter<5) {
         size_t pos = 0;
         while((pos = line.find(valueSeparator)) != string::npos)
@@ -347,15 +349,15 @@ bool ReadDatFileMitutoyo(TString FileName, std::vector<double>& x, std::vector<d
     }
     inSet.close();
   }
-  
+
   return true;
 }
 
 //______________________________________________________________________________________________
 bool MatchMeas(double xmeas1, double ymeas1, double xmeas2, double ymeas2, double accradius) {
-  
+
   if(TMath::Sqrt((xmeas1-xmeas2)*(xmeas1-xmeas2)+(ymeas1-ymeas2)*(ymeas1-ymeas2))<accradius) return true;
-  
+
   return false;
 }
 
