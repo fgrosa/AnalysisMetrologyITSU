@@ -46,7 +46,7 @@
 //all values are in mm
 
 //input file
-const TString FileName="PatternRecoTest/T-OB-HS-L-006_ALC-0312-01_233_PLANARITY_ALLMODULES_2018_7_6_beforeUarms_MAN.dat";
+const TString FileName="/home/bianca/Downloads/StaveMetrology/StaveMetrology/STAVE4/HS_left/ALC-0312-01_246_PLANARITY_ALLMODULES_2018_3_29_beforeUarms.dat";
 //flag to set the type of file (simple text or from Mitutoyo)
 const bool fMitutoyoFile=true;
 
@@ -148,7 +148,7 @@ int Measure_Planarity()
   double parb = fplane->GetParameter(1);
   double parc = fplane->GetParameter(2);
   if(fPlanarityWRTnominal) {
-    para=Znominal;
+    para=Znominal*scalefactor;
     parb=0.;
     parc=0.;
   }
