@@ -83,6 +83,8 @@ const double ymin=-1000;//minimum y for plotting
 const double ymax=1000;//maximum y for plotting
 const double zmin=-1000;//minimum z for plotting (residuals)
 const double zmax=1000;//maximum z for plotting (residuals)
+const int colors[4]={kRed,kBlue,kGreen+2,kBlack};
+const int markers [4]={kFullCircle,kFullSquare,kFullDiamond,kFullTriangleUp};
 
 //_____________________________________________________________________________________________
 //FUNCTION PROTOTYPES
@@ -106,7 +108,7 @@ int Measure_Planarity()
   bool read=false;
   if(!fMitutoyoFile) read=ReadFile(FileName,x,y,z);
   else read=ReadDatFileMitutoyo(FileName,x,y,z);
-  
+
   if(!read) {
     cerr << "Impossibile to find the input file. Exit" << endl;
     return 1;
@@ -121,7 +123,7 @@ int Measure_Planarity()
   }
 
   TGraph2D* g = new TGraph2D(y.size());
-  for(Uint iEntry=0; iEntry<y.size(); iEntry++) {
+  for(unsigned int iEntry=0; iEntry<y.size(); iEntry++) {
     g->SetPoint(iEntry,x[iEntry],y[iEntry],z[iEntry]);
   }
 
@@ -153,7 +155,7 @@ int Measure_Planarity()
 
   int nPoints=0;
 
-  for(Uint iEntry=0; iEntry<y.size(); iEntry++) {
+  for(unsigned int iEntry=0; iEntry<y.size(); iEntry++) {
     if(onlywithinplanes && !IsInside(y[iEntry]))
       continue;
     nPoints++;
@@ -168,14 +170,14 @@ int Measure_Planarity()
   }
   TGraph* gcorr_xint = new TGraph(0);
   gcorr_xint->SetName("gcorr_xint");
-  
+
   std::vector<double> zcorr;
   std::vector<double> zinside;
-  Uint poscounter=0;
-  Uint iPoint[nXcoord];
+  unsigned int poscounter=0;
+  unsigned int iPoint[nXcoord];
   for(int iX=0; iX<nXcoord; iX++) {iPoint[iX]=0;}
-  Uint counter=0;
-  for(Uint iEntry=0; iEntry<nPoints; iEntry++) {
+  unsigned int counter=0;
+  for(unsigned int iEntry=0; iEntry<nPoints; iEntry++) {
 
     zcorr.push_back(z[iEntry]-(para+parb*x[iEntry]+parc*y[iEntry]));
 
@@ -347,14 +349,14 @@ bool ReadDatFileMitutoyo(TString FileName, std::vector<double>& x, std::vector<d
     cerr << "Wrong file format. Exit." << endl;
     return false;
   }
-  
+
   string valueSeparator = ";";
   ifstream inSet(FileName.Data());
   if(!inSet) {
     cerr<<"Please check if "<<FileName.Data() <<" is the right path. Exit."<<endl;
     return false;
   }
-  
+
   bool islineok=true;
   int linecounter=0;
   if (inSet.is_open()) {
@@ -374,7 +376,7 @@ bool ReadDatFileMitutoyo(TString FileName, std::vector<double>& x, std::vector<d
         islineok=true;
       }
       if(test.Contains("MarkerCenter")) {islineok=false;}
-      
+
       if(islineok && linecounter<5) {
         size_t pos = 0;
         while((pos = line.find(valueSeparator)) != string::npos)
@@ -404,7 +406,7 @@ bool ReadDatFileMitutoyo(TString FileName, std::vector<double>& x, std::vector<d
     }
     inSet.close();
   }
-  
+
   return true;
 }
 
@@ -414,7 +416,7 @@ void CreateTxtFile(TString FileName, std::vector<double>& x, std::vector<double>
   ofstream outSet;
   outSet.open(FileName.Data());
 
-  for(Uint iEntry=0; iEntry<z.size(); iEntry++) {
+  for(unsigned int iEntry=0; iEntry<z.size(); iEntry++) {
     outSet << x[iEntry] << " " << y[iEntry] << " " << z[iEntry] << endl;
   }
 
@@ -446,7 +448,7 @@ void GetMeanSigmaAndPlanarity(std::vector<double> z, double& mean, double& sigma
   double max=z[0];
   double min=z[0];
 
-  for(Uint iEntry=0; iEntry<z.size(); iEntry++) {
+  for(unsigned int iEntry=0; iEntry<z.size(); iEntry++) {
     mean += z[iEntry];
     if(z[iEntry]>max)
       max=z[iEntry];
@@ -456,7 +458,7 @@ void GetMeanSigmaAndPlanarity(std::vector<double> z, double& mean, double& sigma
   cout << min << "  " << max << endl;
   mean /= z.size();
 
-  for(Uint iEntry=0; iEntry<z.size(); iEntry++) {
+  for(unsigned int iEntry=0; iEntry<z.size(); iEntry++) {
     sigma += (z[iEntry]-mean)*(z[iEntry]-mean);
   }
   sigma /= (z.size()-1);
