@@ -66,8 +66,36 @@ const char *fileformats[] = { "All files",     "*",
                               "ROOT macros",   "*.C",
                               "Text files",    "*.[tT][xX][tT]",
                               0,               0 };
-                              
-                              
+
+class GroupBox : public TGGroupFrame {
+  private:
+    TGTextButton *fButton;
+    TGTextEntry  *fEntry;
+
+  public:
+    GroupBox(const TGWindow *p, const char *name);
+    TGTextEntry*  GetEntry()  { return fEntry; }
+    TGTextButton* GetButton() { return fButton; }
+
+    ClassDef(GroupBox, 1);
+};
+
+//______________________________________________________________________________
+GroupBox::GroupBox(const TGWindow *p, const char *name) :
+   TGGroupFrame(p, name)
+{
+   // Group frame containing text entry and text button.
+   fEntry = new TGTextEntry(this);
+   fEntry->SetDefaultSize(fEntry->GetWidth()*8, fEntry->GetHeight());
+   AddFrame(fEntry, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+
+   TGHorizontalFrame *horz = new TGHorizontalFrame(this);
+   AddFrame(horz, new TGLayoutHints(kLHintsExpandX | kLHintsCenterY));
+
+   fButton = new TGTextButton(horz, "&Open");
+   horz->AddFrame(fButton, new TGLayoutHints(kLHintsRight | kLHintsExpandY, 3,3,3,3));
+}
+
 //______________________________________________________________________________________________
 //GUI IMPLEMENTATION
 class MainFrame {
@@ -76,25 +104,25 @@ class MainFrame {
  private:
   TGMainFrame*          fMain;
   TGTab*                fTab;
-  TGComboBox*           fComboHSL;
-  TGComboBox*           fComboHSR;
-  TGComboBox*           fComboStave;
+  GroupBox*             fGboxHSL;
+  GroupBox*             fGboxHSR;
+  GroupBox*             fGboxStave;
   TString               fFileNameHSL;
   TString               fFileNameHSR;
   TString               fFileNameStave;
   TString               fInitDir;
   TRootEmbeddedCanvas*  fEcanvas;
-  
+
  public:
    enum HStype{kHSL, kHSR, kStave};
 
   MainFrame(const TGWindow* p, unsigned int w, unsigned int h);
   virtual ~MainFrame();
-  TString GetFileName(int ftype) { 
-    if(ftype==kHSL)        return fFileNameHSL; 
-    else if(ftype==kHSR)   return fFileNameHSR; 
+  TString GetFileName(int ftype) {
+    if(ftype==kHSL)        return fFileNameHSL;
+    else if(ftype==kHSR)   return fFileNameHSR;
     else if(ftype==kStave) return fFileNameStave;
-    else return "."; 
+    else return ".";
   }
   void DoOpenHSLFile();
   void DoOpenHSRFile();
@@ -109,7 +137,7 @@ MainFrame::MainFrame(const TGWindow* p, unsigned int w, unsigned int h):
   fFileNameStave(".")
 {
   fInitDir = gSystem->WorkingDirectory();
-  
+
   fMain = new TGMainFrame(p,w,h);
   fMain->DontCallClose(); // to avoid double deletions.
   // use hierarchical cleaning
@@ -122,41 +150,36 @@ MainFrame::MainFrame(const TGWindow* p, unsigned int w, unsigned int h):
   TGLayoutHints* fL3=new TGLayoutHints(kLHintsTop|kLHintsLeft|kLHintsExpandX,
                                        2, 2, 2, 2);
   TGLayoutHints* fL4=new TGLayoutHints(kLHintsTop|kLHintsLeft|kLHintsExpandX,
-                                       2, 2, 5, 1);
+                                       5, 5, 5, 5);
   TGLayoutHints* fL5=new TGLayoutHints(kLHintsTop|kLHintsRight,
                                        2, 2, 5, 1);
   TGLayoutHints* fL6=new TGLayoutHints(kLHintsExpandX|kLHintsExpandY,
                                        5, 5, 5, 5);
   // Create a horiz frame widget button and combobox
-  TGVerticalFrame* hFrameTop=new TGVerticalFrame(fMain,40,80);
-  TGTextButton* exit = new TGTextButton(hFrameTop,"&Exit","gApplication->Terminate(0)");
-  hFrameTop->AddFrame(exit, fL2);
+  TGVerticalFrame* hFrameTop= new TGVerticalFrame(fMain,40,80);
+  fGboxHSL = new GroupBox(fMain, "HS-L");
+  hFrameTop->AddFrame(fGboxHSL, fL1);
+  fGboxHSL->GetButton()->Connect("Clicked()","MainFrame",this,"DoOpenHSLFile()");
+  fGboxHSR = new GroupBox(fMain, "HS-R");
+  hFrameTop->AddFrame(fGboxHSR, fL1);
+  fGboxHSR->GetButton()->Connect("Clicked()","MainFrame",this,"DoOpenHSRFile()");
+  fGboxStave = new GroupBox(fMain, "HS-Stave");
+  hFrameTop->AddFrame(fGboxStave, fL1);
+  fGboxStave->GetButton()->Connect("Clicked()","MainFrame",this,"DoOpenStaveFile()");
 
-  fComboHSL=new TGComboBox(hFrameTop);
-  fComboHSR=new TGComboBox(hFrameTop);
-  fComboStave=new TGComboBox(hFrameTop);
+  TGHorizontalFrame* hFrameBot = new TGHorizontalFrame(hFrameTop);
+  hFrameTop->AddFrame(hFrameBot, fL5);
 
-  TGTextButton* openHSL=new TGTextButton(hFrameTop,"&OpenFileHSL");
-  openHSL->Connect("Clicked()","MainFrame",this,"DoOpenHSLFile()");
-  hFrameTop->AddFrame(openHSL,   fL1);
-  hFrameTop->AddFrame(fComboHSL, fL1);
-  fComboHSL->Resize(250, openHSL->GetDefaultHeight());
-  TGTextButton* openHSR=new TGTextButton(hFrameTop,"&OpenFileHSR");
-  openHSR->Connect("Clicked()","MainFrame",this,"DoOpenHSRFile()");
-  hFrameTop->AddFrame(openHSR,   fL1);
-  hFrameTop->AddFrame(fComboHSR, fL1);
-  fComboHSR->Resize(250, openHSR->GetDefaultHeight());
-  TGTextButton* openStave=new TGTextButton(hFrameTop,"&OpenFileStave");
-  openStave->Connect("Clicked()","MainFrame",this,"DoOpenStaveFile()");
-  hFrameTop->AddFrame(openStave,   fL1);
-  hFrameTop->AddFrame(fComboStave, fL1);
-  fComboStave->Resize(250, openStave->GetDefaultHeight());
-  TGTextButton* dometrology=new TGTextButton(hFrameTop,"&DoMetrology");
+  TGTextButton* dometrology=new TGTextButton(hFrameBot,"&DoMetrology");
   dometrology->Connect("Clicked()","MainFrame",this,"DoMetrologyAndExtrapolation()");
-  hFrameTop->AddFrame(dometrology, fL2);
-    
+  hFrameBot->AddFrame(dometrology, fL1);
+
+  TGTextButton* exit = new TGTextButton(hFrameBot,"&Exit","gApplication->Terminate(0)");
+  hFrameBot->AddFrame(exit, fL1);
+
+
   fMain->AddFrame(hFrameTop, fL4);
-  
+
   //--------- create Tab widget and some composite frames
   fTab = new TGTab(fMain, 300, 300);
   const int kNtab=11;
@@ -177,7 +200,7 @@ MainFrame::MainFrame(const TGWindow* p, unsigned int w, unsigned int h):
   fMain->Resize(fMain->GetDefaultSize());
 
   // Map main frame
-  fMain->MapWindow();  
+  fMain->MapWindow();
 }
 
 //_______________________________________________________________________________
@@ -196,6 +219,8 @@ void MainFrame::DoOpenHSLFile()
   fi.fIniDir = StrDup(fFileNameHSL);
   new TGFileDialog(gClient->GetRoot(), fMain, kFDOpen, &fi);
   fFileNameHSL=fi.fFilename;
+  TGTextEntry* entry = fGboxHSL->GetEntry();
+  entry->SetText(fFileNameHSL.Data());
   std::cout << "\n\n\nOpen HSL file: "<<  fFileNameHSL << std::endl;
 
   return;
@@ -209,6 +234,8 @@ void MainFrame::DoOpenHSRFile()
   fi.fIniDir = StrDup(fFileNameHSR);
   new TGFileDialog(gClient->GetRoot(), fMain, kFDOpen, &fi);
   fFileNameHSR=fi.fFilename;
+  TGTextEntry* entry = fGboxHSR->GetEntry();
+  entry->SetText(fFileNameHSR.Data());
   std::cout << "Open HSR file: "<<  fFileNameHSR << std::endl;
 
   return;
@@ -222,13 +249,15 @@ void MainFrame::DoOpenStaveFile()
   fi.fIniDir = StrDup(fFileNameStave);
   new TGFileDialog(gClient->GetRoot(), fMain, kFDOpen, &fi);
   fFileNameStave=fi.fFilename;
+  TGTextEntry* entry = fGboxStave->GetEntry();
+  entry->SetText(fFileNameStave.Data());
   std::cout << "Open Stave file: "<<  fFileNameStave << "\n\n" <<std::endl;
 
   return;
 }
 
 //_______________________________________________________________________________
-int MainFrame::DoMetrologyAndExtrapolation() 
+int MainFrame::DoMetrologyAndExtrapolation()
 {
   SetStyle();
 
@@ -262,21 +291,21 @@ void FinalMarkerPositionExtrapolationAndQA()
 
 //_____________________________________________________________________________________________
 int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSright, TString infilename_FinalStave, TString initdir, TCanvas** fCanvas) {
-    
+
   //load measured marker positions HS_left BEFORE U-ARMS
   std::vector<double> x_HSleft;
   std::vector<double> y_HSleft;
   std::vector<double> z_HSleft;
   bool loadfile = ReadDatFileMitutoyo(infilename_HSleft,x_HSleft,y_HSleft,z_HSleft,-12.9);
   if(!loadfile) {return 1;}
-  
+
   //load measured marker positions HS_right BEFORE U-ARMS
   std::vector<double> x_HSright;
   std::vector<double> y_HSright;
   std::vector<double> z_HSright;
   loadfile=ReadDatFileMitutoyo(infilename_HSright,x_HSright,y_HSright,z_HSright,12.9);
   if(!loadfile) {return 2;}
-    
+
   //load measured marker positions Final Stave Metrology
   std::vector<double> x_FinalStave;
   std::vector<double> y_FinalStave;
@@ -284,7 +313,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   loadfile=ReadDatFileMitutoyo(infilename_FinalStave,x_FinalStave,y_FinalStave,z_FinalStave);
   if(!loadfile) {return 3;}
 
-  //divide final positions in HSleft and HSright 
+  //divide final positions in HSleft and HSright
   std::vector<double> x_FinalStave_HSleft;
   std::vector<double> y_FinalStave_HSleft;
   std::vector<double> z_FinalStave_HSleft;
@@ -300,7 +329,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
     else {
       x_FinalStave_HSright.push_back(x_FinalStave[iEntry]);
       y_FinalStave_HSright.push_back(y_FinalStave[iEntry]);
-      z_FinalStave_HSright.push_back(z_FinalStave[iEntry]);      
+      z_FinalStave_HSright.push_back(z_FinalStave[iEntry]);
     }
   }
 
@@ -320,7 +349,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   std::vector<double> z_HSright_nominal;
   loadfile=ReadDatFile(nominalposition_HS,x_HSright_nominal,y_HSright_nominal,z_HSright_nominal,12.9);
   if(!loadfile) {return 5;}
-  
+
   //create vectors with nominal number of markers; fill with -10000 if marker not measured
   //compute nominal if != -10000
   //HS_left
@@ -330,9 +359,9 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
 
   std::vector<double> x_HSleft_restonominal;
   std::vector<double> y_HSleft_restonominal;
-  
+
   FillVectorsOfMatchedPositions(x_HSleft,y_HSleft,z_HSleft,x_HSleft_nominal,y_HSleft_nominal,x_HSleft_filled,y_HSleft_filled,z_HSleft_filled,x_HSleft_restonominal,y_HSleft_restonominal);
-  
+
   std::cout << "\n\n\n\n**************************************** HSL first metrology on bss ******************************************" << std::endl;
   bool okmatch = PrintMatchedCoordinates(x_HSleft_filled,y_HSleft_filled,x_HSleft_nominal,y_HSleft_nominal,12.9);
   if(!okmatch) {return -1;}
@@ -343,7 +372,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   std::vector<double> x_HSright_filled;
   std::vector<double> y_HSright_filled;
   std::vector<double> z_HSright_filled;
-  
+
   std::vector<double> x_HSright_restonominal;
   std::vector<double> y_HSright_restonominal;
 
@@ -375,24 +404,24 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   std::vector<double> x_FinalStave_HSright_filled;
   std::vector<double> y_FinalStave_HSright_filled;
   std::vector<double> z_FinalStave_HSright_filled;
-  
+
   std::vector<double> x_FinalStave_HSright_restonominal;
   std::vector<double> y_FinalStave_HSright_restonominal;
 
   FillVectorsOfMatchedPositions(x_FinalStave_HSright,y_FinalStave_HSright,z_FinalStave_HSright,x_HSright_nominal,y_HSright_nominal,x_FinalStave_HSright_filled,y_FinalStave_HSright_filled,z_FinalStave_HSright_filled,x_FinalStave_HSright_restonominal,y_FinalStave_HSright_restonominal);
-  
+
   std::cout << "\n\n\n\n**************************************** HSL final metrology on Meas ******************************************" << std::endl;
   okmatch = PrintMatchedCoordinates(x_FinalStave_HSright_filled,y_FinalStave_HSright_filled,x_HSright_nominal,y_HSright_nominal,0.);
   if(!okmatch) {return -1;}
   std::cout << "\nNumber of measured markers: " << x_FinalStave_HSright.size() << ", Number of not measured markers: " << x_FinalStave_HSright_filled.size() - x_FinalStave_HSright.size() << std::endl;
   std::cout << "\n***************************************************************************************************************\n\n\n" << std::endl;
-    
+
   //Fill graphs / histograms
   TF2* fPlaneHSleft = new TF2("fPlaneHSleft","[0]+[1]*x+[2]*y",-15,15,-1000,1000);
   TF2* fPlaneHSright = new TF2("fPlaneHSright","[0]+[1]*x+[2]*y",-15,15,-1000,1000);
   TF2* fPlaneStaveHSleft = new TF2("fPlaneStaveHSleft","[0]+[1]*x+[2]*y",-30,5,-1000,1000);
   TF2* fPlaneStaveHSright = new TF2("fPlaneStaveHSright","[0]+[1]*x+[2]*y",-5,30,-1000,1000);
-  
+
   //HS left
   TGraph2D* gHSleftMeas = new TGraph2D(x_HSleft.size());
   gHSleftMeas->SetName("gHSleftMeas");
@@ -400,10 +429,10 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   gHSleftMeas->SetMarkerColor(kRed);
   for(unsigned int iEntry=0; iEntry<x_HSleft.size(); iEntry++) {
     gHSleftMeas->SetPoint(iEntry,x_HSleft[iEntry]+12.9,y_HSleft[iEntry],z_HSleft[iEntry]);
-  }  
+  }
   gHSleftMeas->Fit("fPlaneHSleft");
 
-  //HS right 
+  //HS right
   TGraph2D* gHSrightMeas = new TGraph2D(x_HSright.size());
   gHSrightMeas->SetName("gHSrightMeas");
   gHSrightMeas->SetMarkerStyle(kFullSquare);
@@ -412,8 +441,8 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
     gHSrightMeas->SetPoint(iEntry,x_HSright[iEntry]-12.9,y_HSright[iEntry],z_HSright[iEntry]);
   }
   gHSrightMeas->Fit("fPlaneHSright");
-  
-  //Final stave (all markers) 
+
+  //Final stave (all markers)
   TGraph2D* gStaveMeas = new TGraph2D(x_FinalStave.size());
   gStaveMeas->SetName("gStaveMeas");
   gStaveMeas->SetMarkerStyle(kFullCircle);
@@ -421,7 +450,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   for(unsigned int iEntry=0; iEntry<x_FinalStave.size(); iEntry++) {
     gStaveMeas->SetPoint(iEntry,x_FinalStave[iEntry],y_FinalStave[iEntry],z_FinalStave[iEntry]);
   }
-  
+
   //HS left (final stave)
   TGraph2D* gStaveMeasHSleft = new TGraph2D(x_FinalStave_HSleft.size());
   gStaveMeasHSleft->SetName("gStaveMeasHSleft");
@@ -429,7 +458,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   gStaveMeasHSleft->SetMarkerColor(kRed);
   for(unsigned int iEntry=0; iEntry<x_FinalStave_HSleft.size(); iEntry++) {
     gStaveMeasHSleft->SetPoint(iEntry,x_FinalStave_HSleft[iEntry],y_FinalStave_HSleft[iEntry],z_FinalStave_HSleft[iEntry]);
-  }  
+  }
   gStaveMeasHSleft->Fit("fPlaneStaveHSleft");
 
   //HS right (final stave)
@@ -438,7 +467,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   gStaveHSrightMeas->SetMarkerStyle(kFullSquare);
   gStaveHSrightMeas->SetMarkerColor(kBlue);
   for(unsigned int iEntry=0; iEntry<x_FinalStave_HSright.size(); iEntry++) {
-    gStaveHSrightMeas->SetPoint(iEntry,x_FinalStave_HSright[iEntry],y_FinalStave_HSright[iEntry],z_FinalStave_HSright[iEntry]);  
+    gStaveHSrightMeas->SetPoint(iEntry,x_FinalStave_HSright[iEntry],y_FinalStave_HSright[iEntry],z_FinalStave_HSright[iEntry]);
   }
   gStaveHSrightMeas->Fit("fPlaneStaveHSright");
 
@@ -450,7 +479,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
     hResToNominalHSleft_X->Fill(x_HSleft_restonominal[iEntry]);
     hResToNominalHSleft_Y->Fill(y_HSleft_restonominal[iEntry]);
   }
-  
+
   //HS right
   TH1F* hResToNominalHSright_X = new TH1F("hResToNominalHSright_X","Residuals to X nominal positions on HSR;x_{meas}-x_{nom} (#mum); Entries",500,-1000,1000);
   TH1F* hResToNominalHSright_Y = new TH1F("hResToNominalHSright_Y","Residuals to Y nominal positions on HSR;y_{meas}-y_{nom} (#mum); Entries",500,-1000,1000);
@@ -458,7 +487,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
     hResToNominalHSright_X->Fill(x_HSright_restonominal[iEntry]);
     hResToNominalHSright_Y->Fill(y_HSright_restonominal[iEntry]);
   }
-  
+
   //Final Stave - HS left
   TH1F* hResToNominalStave_HSleft_X = new TH1F("hResToNominalStave_HSleft_X","Final Stave - Residuals to X nominal positions on HSL;x_{meas}-x_{nom} (#mum); Entries",500,-1000,1000);
   TH1F* hResToNominalStave_HSleft_Y = new TH1F("hResToNominalStave_HSleft_Y","Final Stave - Residuals to Y nominal positions on HSL;y_{meas}-y_{nom} (#mum); Entries",500,-1000,1000);
@@ -475,7 +504,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
     hResToNominalStave_HSright_Y->Fill(y_FinalStave_HSright_restonominal[iEntry]);
   }
 
-  //compute Z residuals w.r.t. average plane and planarity 
+  //compute Z residuals w.r.t. average plane and planarity
   //HS left
   TGraph* gResToNomPlaneHSleft_Z = new TGraph(x_HSleft.size());
   gResToNomPlaneHSleft_Z->SetName("gResToNomPlaneHSleft_Z");
@@ -594,9 +623,9 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
     else {
       gResToNomPlaneStaveHSleft_Z_negX->SetPoint(xnegcounter,y_FinalStave_HSleft[iEntry],zres*1000);
       xnegcounter++;
-    }  
+    }
   }
-  
+
   //HS right (final stave)
   TGraph* gResToNomPlaneStaveHSright_Z = new TGraph(x_FinalStave_HSright.size());
   gResToNomPlaneStaveHSright_Z->SetName("gResToNomPlaneStaveHSright_Z");
@@ -625,12 +654,12 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   int nextrap_right=0;
   DoInvisibleMarkerExtrapolation(MainFrame::kHSL,nextrap_left,x_HSleft_nominal,y_HSleft_nominal,x_HSleft_filled,y_HSleft_filled,z_HSleft_filled,x_FinalStave_HSleft_filled,y_FinalStave_HSleft_filled,z_FinalStave_HSleft_filled,x_extrap_HSleft,y_extrap_HSleft,z_extrap_HSleft,true,fPlaneHSleft->GetParameters(),fPlaneStaveHSleft->GetParameters());
   DoInvisibleMarkerExtrapolation(MainFrame::kHSR,nextrap_right,x_HSright_nominal,y_HSright_nominal,x_HSright_filled,y_HSright_filled,z_HSright_filled,x_FinalStave_HSright_filled,y_FinalStave_HSright_filled,z_FinalStave_HSright_filled,x_extrap_HSright,y_extrap_HSright,z_extrap_HSright,true,fPlaneHSleft->GetParameters(),fPlaneStaveHSleft->GetParameters());
-  
+
   //vectors of final positions (measured when available, otherwise extrapolated)
   std::vector<double> x_FinalStave_MeasPlusExtr;
   std::vector<double> y_FinalStave_MeasPlusExtr;
   std::vector<double> z_FinalStave_MeasPlusExtr;
-  //first HSL 
+  //first HSL
   for(unsigned int iNomEntry=0; iNomEntry<x_HSleft_nominal.size(); iNomEntry++) {
     if(x_FinalStave_HSleft_filled[iNomEntry]!=-10000.) {
       x_FinalStave_MeasPlusExtr.push_back(x_FinalStave_HSleft_filled[iNomEntry]);
@@ -657,7 +686,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
     }
   }
 
-  //Fill graphs / histograms 
+  //Fill graphs / histograms
   //extrapolated measurements
   TGraph2D* gStaveExtrap = new TGraph2D(nextrap_right+nextrap_left);
   gStaveExtrap->SetName("gStaveExtrap");
@@ -677,7 +706,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
       nentryright++;
     }
   }
-  
+
   TH1F* hStaveMeasExtrapResX = new TH1F("hStaveMeasExtrapResX","Extrapolated - measured marker position X;x_{extr}-x_{meas} (#mum);Entries",100,-50.,50.);
   TH1F* hStaveMeasExtrapResY = new TH1F("hStaveMeasExtrapResY","Extrapolated - measured marker position Y;y_{extr}-y_{meas} (#mum);Entries",100,-50.,50.);
   TH1F* hStaveMeasExtrapResZ = new TH1F("hStaveMeasExtrapResZ","Extrapolated - measured marker position Z;z_{extr}-z_{meas} (#mum);Entries",100,-500.,500.);
@@ -688,13 +717,13 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
       hStaveMeasExtrapResZ->Fill((z_extrap_HSleft[iEntry]-z_FinalStave_HSleft_filled[iEntry])*1000);
     }
   }
-  
+
   //Draw results
   TH3F* hFrameHS = new TH3F("hFrame",";x (mm);y (mm);z (mm)",100,-50.,50.,100,-1000,1000,100,0.,1.);
   hFrameHS->SetStats(0);
   TH3F* hFrameStave = new TH3F("hFrame",";x (mm);y (mm);z (mm)",100,-50.,50.,100,-1000,1000,100,8.,15.);
   hFrameStave->SetStats(0);
-  
+
   TLegend* legHS = new TLegend(0.6,0.725,0.7,0.825);
   legHS->SetTextSize(0.045);
   legHS->AddEntry(gHSleftMeas,"HSL","p");
@@ -709,7 +738,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   legHS_X->SetTextSize(0.045);
   legHS_X->AddEntry(gResToNomPlaneHSright_Z_posX,"x = 15 mm","p");
   legHS_X->AddEntry(gResToNomPlaneHSright_Z_negX,"x = -15 mm","p");
-  
+
   TLegend* legStaveHSL_X = new TLegend(0.7,0.725,0.85,0.825);
   legStaveHSL_X->SetTextSize(0.045);
   legStaveHSL_X->AddEntry(gResToNomPlaneStaveHSleft_Z_posX,"x = 2 mm","p");
@@ -728,7 +757,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
     text[iText]->SetFillColor(kWhite);
     text[iText]->SetBorderSize(1);
   }
-  
+
   TCanvas*& cHS = fCanvas[0];
   cHS->cd();
   hFrameHS->Draw();
@@ -736,7 +765,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   gHSrightMeas->Draw("Psame");
   legHS->Draw("same");
   cHS->Update();
-  
+
   TCanvas*& cHSleft_plan = fCanvas[1];
   cHSleft_plan->cd();
   gResToNomPlaneHSleft_Z->GetYaxis()->SetRangeUser(-500.,500);
@@ -751,7 +780,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   text[0]->Draw("same");
   legHS_X->Draw("same");
   cHSleft_plan->Update();
-  
+
   TCanvas*& cHSright_plan = fCanvas[2];
   cHSright_plan->cd();
   gResToNomPlaneHSright_Z->GetYaxis()->SetRangeUser(-500.,500);
@@ -803,7 +832,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   text[2]->Draw("same");
   legStaveHSL_X->Draw("same");
   cStaveHSleft_plan->Update();
-  
+
   TCanvas*& cStaveHSright_plan = fCanvas[6];
   cStaveHSright_plan->cd();
   gResToNomPlaneStaveHSright_Z->GetYaxis()->SetRangeUser(-500.,500);
@@ -893,7 +922,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   hStaveMeasExtrapResY->Write();
   hStaveMeasExtrapResZ->Write();
   outfile.Close();
-  
+
   //pdf file with QA plots
   TString outfilenamepdf = outfilenameroot;
   outfilenamepdf.ReplaceAll(".root",".pdf");
@@ -943,13 +972,13 @@ bool ReadDatFile(TString FileName, std::vector<double>& x, std::vector<double>& 
 }
 
 //_____________________________________________________________________________________________
-bool ReadDatFileMitutoyo(TString FileName, std::vector<double>& x, std::vector<double>& y, std::vector<double>& z, double xoffset) 
+bool ReadDatFileMitutoyo(TString FileName, std::vector<double>& x, std::vector<double>& y, std::vector<double>& z, double xoffset)
 {
   if(!FileName.Contains(".txt") && !FileName.Contains(".dat") && !FileName.Contains(".csv")) {
     std::cerr << "Wrong file format. Exit." << std::endl;
     return false;
   }
-  
+
   string valueSeparator = ";";
   ifstream inSet(FileName.Data());
   if(!inSet) {
@@ -960,7 +989,7 @@ bool ReadDatFileMitutoyo(TString FileName, std::vector<double>& x, std::vector<d
   bool islineok=true;
   int linecounter=0;
   if (inSet.is_open()) {
-    while(!inSet.eof()) 
+    while(!inSet.eof())
     {
       islineok=true;
       std::vector<string> values;
@@ -976,7 +1005,7 @@ bool ReadDatFileMitutoyo(TString FileName, std::vector<double>& x, std::vector<d
         islineok=true;
       }
       if(test.Contains("MarkerCenter")) {islineok=false;}
-      
+
       if(islineok && linecounter<5) {
         size_t pos = 0;
         while((pos = line.find(valueSeparator)) != string::npos)
@@ -1006,7 +1035,7 @@ bool ReadDatFileMitutoyo(TString FileName, std::vector<double>& x, std::vector<d
     }
     inSet.close();
   }
-    
+
   return true;
 }
 
@@ -1015,26 +1044,26 @@ void CreateDatFile(TString FileName, std::vector<double>& x, std::vector<double>
 {
   ofstream outSet;
   outSet.open(FileName.Data());
-  
+
   for(unsigned int iEntry=0; iEntry<z.size(); iEntry++) {
     outSet << x[iEntry] << " " << y[iEntry] << " " << z[iEntry] << std::endl;
   }
-  
+
   std::cout << "File " << FileName.Data() << " saved." << std::endl;
   outSet.close();
 }
 
 //______________________________________________________________________________________________
 bool MatchMeasToNominal(double xmeas, double ymeas, double xnom, double ynom, double accdeltax, double accdeltay, double yshift) {
-  
+
   if(TMath::Abs(xmeas-xnom)<accdeltax && TMath::Abs((ymeas-yshift)-ynom)<accdeltay) return true;
-  
+
   return false;
 }
 
 //______________________________________________________________________________________________
 void FillVectorsOfMatchedPositions(std::vector<double> xmeas, std::vector<double> ymeas, std::vector<double> zmeas, std::vector<double> xnom, std::vector<double> ynom, std::vector<double>& xmeasfilled, std::vector<double>& ymeasfilled, std::vector<double>& zmeasfilled, std::vector<double>& xres, std::vector<double>& yres) {
-  
+
   //positions of initial markers in std::vector
   std::vector<unsigned int>  modinitmarkers;
   modinitmarkers.push_back(0);
@@ -1073,10 +1102,10 @@ void FillVectorsOfMatchedPositions(std::vector<double> xmeas, std::vector<double
       xmeasfilled.push_back(xmeas[matchedmarkerpos]);
       ymeasfilled.push_back(ymeas[matchedmarkerpos]);
       zmeasfilled.push_back(zmeas[matchedmarkerpos]);
-        
+
       xres.push_back((xmeas[matchedmarkerpos]-xnom[iNomEntry])*1000);
       yres.push_back((ymeas[matchedmarkerpos]-ynom[iNomEntry])*1000);
-        
+
       if(it!=modinitmarkers.end()) {yshift = ymeas[matchedmarkerpos]-ynom[iNomEntry];} //if first marker of a module is shifted all the others will be shifted
     }
     else {
@@ -1096,7 +1125,7 @@ int FindOppositeNominalMarkerPosition(double x, double y, std::vector<double> xv
       break;
     }
   }
-  
+
   return posmarker;
 }
 
@@ -1105,19 +1134,19 @@ double ComputeResidualToPlane(double x, double y, double z, double *pars) {
 
   double zplane = pars[0]+pars[1]*x+pars[2]*y;
   double res = z - zplane;
-  
+
   return res;
 }
 
 //______________________________________________________________________________________________
-void ComputePlanarityRMSandMean(TGraph* graph, double &planarity, double &zRMS, double &zmean) 
+void ComputePlanarityRMSandMean(TGraph* graph, double &planarity, double &zRMS, double &zmean)
 {
-  
+
   double zmax = -1.e20;
   double zmin = 1.e20;
   zmean = 0;
   zRMS = 0;
-  
+
   for(int iEntry=0; iEntry<graph->GetN(); iEntry++) {
     double y,z; //planarity measurements are z vs. y
     graph->GetPoint(iEntry,y,z);
@@ -1126,31 +1155,31 @@ void ComputePlanarityRMSandMean(TGraph* graph, double &planarity, double &zRMS, 
     zmean+=z;
   }
   zmean /= graph->GetN();
-  
+
   for(int iEntry=0; iEntry<graph->GetN(); iEntry++) {
     double y,z; //planarity measurements are z vs. y
     graph->GetPoint(iEntry,y,z);
     zRMS += (z-zmean)*(z-zmean);
   }
-  
+
   zRMS /= (graph->GetN()-1);
   zRMS = TMath::Sqrt(zRMS);
-  
+
   planarity = zmax-zmin;
 }
 
 //______________________________________________________________________________________________
 bool PrintMatchedCoordinates(std::vector<double> xmeas, std::vector<double> ymeas, std::vector<double> xnom, std::vector<double> ynom, double shiftx) {
-  
+
   if(xmeas.size()!=xnom.size() || ymeas.size()!=ynom.size()) {
-    std::cerr << "Different number of entries between measured and nominal positions. Exit." << std::endl; 
+    std::cerr << "Different number of entries between measured and nominal positions. Exit." << std::endl;
     return false;
   }
-  
+
   for(unsigned int iCoord=0; iCoord<xmeas.size(); iCoord++) {
     std::cout << Form("%d:  xmeas = %0.4f  ymeas = %0.4f  xnom = %0.4f  ynom = %0.4f  resx = %0.4f resy =  %0.4f",iCoord,xmeas[iCoord]+shiftx,ymeas[iCoord],xnom[iCoord]+shiftx,ynom[iCoord],xmeas[iCoord]-xnom[iCoord],ymeas[iCoord]-ynom[iCoord])<<std::endl;
   }
-  
+
   return true;
 }
 
@@ -1160,7 +1189,7 @@ void DoInvisibleMarkerExtrapolation(int LeftOrRight, int &nextrap, std::vector<d
   for(unsigned int iEntry=0; iEntry<x_nominal.size(); iEntry++) {
     if((LeftOrRight==MainFrame::kHSL && x_nominal[iEntry]>0) || (LeftOrRight==MainFrame::kHSR && x_nominal[iEntry]<0)) {
       int posoppmarker = FindOppositeNominalMarkerPosition(x_nominal[iEntry],y_nominal[iEntry],x_nominal,y_nominal);
-      
+
       if(x_filled_HS[posoppmarker]!=-10000 && x_filled_HS[iEntry]!=-10000 && x_filled_Stave[posoppmarker]!=-10000) {
         double deltax = x_filled_HS[iEntry]-x_filled_HS[posoppmarker];
         double deltay = y_filled_HS[iEntry]-y_filled_HS[posoppmarker];
@@ -1181,13 +1210,13 @@ void DoInvisibleMarkerExtrapolation(int LeftOrRight, int &nextrap, std::vector<d
       else {
         x_extrap.push_back(-10000.);
         y_extrap.push_back(-10000.);
-        z_extrap.push_back(-10000.);        
+        z_extrap.push_back(-10000.);
       }
     }
     else {
       x_extrap.push_back(-10000.);
       y_extrap.push_back(-10000.);
-      z_extrap.push_back(-10000.);        
+      z_extrap.push_back(-10000.);
     }
   }
 }
