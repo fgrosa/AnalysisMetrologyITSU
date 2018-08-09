@@ -23,7 +23,7 @@
 
 #endif
 
-const TString infilenames[] = {"../OB_Staves_Metrology/STAVE5/Stave/STAVE_MARKERPOS_2018_6_6_T-OL-Stave-5_T-OL-HS-U-005_ALC-0312-01_109_T-OL-HS-L-005_ALC-0312-01_248_MeasAndExtrap.root"};
+const TString infilenames[] = {"/home/cecilia/Desktop/STAGE/StavesMetrology/Stave5/Stave/STAVE_MARKERPOS_2018_6_6_T-OL-Stave-5_T-OL-HS-U-005_ALC-0312-01_109_T-OL-HS-L-005_ALC-0312-01_248_MeasAndExtrap.root"};
 const int xaxistitle[] = {5};
 
 int PlotPlanarityVsHS();
