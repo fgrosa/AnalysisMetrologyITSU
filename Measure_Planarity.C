@@ -46,7 +46,8 @@
 //all values are in mm
 
 //input file
-const TString FileName="/home/bianca/Downloads/StaveMetrology/StaveMetrology/STAVE4/HS_left/ALC-0312-01_246_PLANARITY_ALLMODULES_2018_3_29_beforeUarms.dat";
+//const TString FileName="/home/bianca/Downloads/StaveMetrology/StaveMetrology/STAVE4/HS_left/ALC-0312-01_246_PLANARITY_ALLMODULES_2018_3_29_beforeUarms.dat";
+TString FileName="./";
 //flag to set the type of file (simple text or from Mitutoyo)
 const bool fMitutoyoFile=true;
 
@@ -88,7 +89,7 @@ const int markers [4]={kFullCircle,kFullSquare,kFullDiamond,kFullTriangleUp};
 
 //_____________________________________________________________________________________________
 //FUNCTION PROTOTYPES
-int Measure_Planarity();
+int Measure_Planarity(const char* flname="./");
 bool ReadFile(TString FileName, std::vector<double>& x, std::vector<double>& y, std::vector<double>& z);
 bool ReadDatFileMitutoyo(TString FileName, std::vector<double>& x, std::vector<double>& y, std::vector<double>& z);
 void CreateTxtFile(TString FileName, std::vector<double>& x, std::vector<double>& y, std::vector<double>& z);
@@ -99,8 +100,9 @@ void SetStyle();
 
 //_____________________________________________________________________________________________
 //FUNCTION FOR PLANARITY MEASUREMENT
-int Measure_Planarity()
+int Measure_Planarity(const char* flname)
 {
+  FileName=flname;
   std::vector<double> x;
   std::vector<double> y;
   std::vector<double> z;
