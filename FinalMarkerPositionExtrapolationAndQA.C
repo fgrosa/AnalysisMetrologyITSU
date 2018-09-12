@@ -1185,11 +1185,72 @@ bool PrintMatchedCoordinates(std::vector<double> xmeas, std::vector<double> ymea
 
 //______________________________________________________________________________________________
 void DoInvisibleMarkerExtrapolation(int LeftOrRight, int &nextrap, std::vector<double> x_nominal, std::vector<double> y_nominal, std::vector<double> x_filled_HS, std::vector<double> y_filled_HS, std::vector<double> z_filled_HS, std::vector<double> x_filled_Stave, std::vector<double> y_filled_Stave, std::vector<double> z_filled_Stave, std::vector<double>& x_extrap, std::vector<double>& y_extrap, std::vector<double>& z_extrap, bool correctfortilt, double* parsHSplane, double* parsStaveplane) {
+  
+  //positions of initial markers in std::vector
+  std::vector<unsigned int>  modposcornermarkers;
+  std::vector<unsigned int>  modnegcornermarkers;
+  
+  modnegcornermarkers.push_back(14);
+  modnegcornermarkers.push_back(27);
+  modnegcornermarkers.push_back(42);
+  modnegcornermarkers.push_back(55);
+  modnegcornermarkers.push_back(70);
+  modnegcornermarkers.push_back(83);
+  modnegcornermarkers.push_back(98);
+  modnegcornermarkers.push_back(111);
+  modnegcornermarkers.push_back(126);
+  modnegcornermarkers.push_back(139);
+  modnegcornermarkers.push_back(154);
+  modnegcornermarkers.push_back(167);
+  modnegcornermarkers.push_back(182);
+  modnegcornermarkers.push_back(195);
+
+  modposcornermarkers.push_back(0);
+  modposcornermarkers.push_back(13);
+  modposcornermarkers.push_back(28);
+  modposcornermarkers.push_back(41);
+  modposcornermarkers.push_back(56);
+  modposcornermarkers.push_back(69);
+  modposcornermarkers.push_back(84);
+  modposcornermarkers.push_back(97);
+  modposcornermarkers.push_back(112);
+  modposcornermarkers.push_back(125);
+  modposcornermarkers.push_back(140);
+  modposcornermarkers.push_back(153);
+  modposcornermarkers.push_back(168);
+  modposcornermarkers.push_back(181);
+
+  std::vector<unsigned int>::iterator it;
+  bool isposcorner = false;
+  bool isnegcorner = false;
+
   nextrap=0;
   for(unsigned int iEntry=0; iEntry<x_nominal.size(); iEntry++) {
     if((LeftOrRight==MainFrame::kHSL && x_nominal[iEntry]>0) || (LeftOrRight==MainFrame::kHSR && x_nominal[iEntry]<0)) {
       int posoppmarker = FindOppositeNominalMarkerPosition(x_nominal[iEntry],y_nominal[iEntry],x_nominal,y_nominal);
 
+      //vogliamo cercare se iEntry è all'interno di modcornmarkers
+      it = find(modposcornermarkers.begin(), modposcornermarkers.end(), iEntry);
+      if(it!=modposcornermarkers.end()) isposcorner=true; //l'ha trovato.
+      if(!isposcorner) {        
+        it = find(modnegcornermarkers.begin(), modnegcornermarkers.end(), iEntry);
+        if(it!=modnegcornermarkers.end()) isnegcorner=true; //l'ha trovato.
+      }
+
+      const int noppmarkers=3;
+      int oppmarkarray[noppmarkers] = {posoppmarker-1,posoppmarker,posoppmarker+1};
+      if(isposcorner) {
+        oppmarkarray[0] = posoppmarker;
+        oppmarkarray[1] = posoppmarker+1;
+        oppmarkarray[2] = posoppmarker+2;
+      }
+      else if(isnegcorner) {
+        oppmarkarray[0] = posoppmarker;
+        oppmarkarray[1] = posoppmarker-1;
+        oppmarkarray[2] = posoppmarker-2;
+      }
+
+      //inizio loop for per calcolo 3 punti (=noppmarkers) estrapolati
       if(x_filled_HS[posoppmarker]!=-10000 && x_filled_HS[iEntry]!=-10000 && x_filled_Stave[posoppmarker]!=-10000) {
         double deltax = x_filled_HS[iEntry]-x_filled_HS[posoppmarker];
         double deltay = y_filled_HS[iEntry]-y_filled_HS[posoppmarker];
@@ -1202,6 +1263,13 @@ void DoInvisibleMarkerExtrapolation(int LeftOrRight, int &nextrap, std::vector<d
           double tiltcorrection = z_HS_base-z_HS_SF;
           deltaz+=tiltcorrection;
         }
+
+        //calcolare i 3 punti estrapolati (e.g. x_filled_Stave[posoppmarker]+deltax)
+        //fine loop for per calcolo dei 2-3 punti estrapolati
+
+        //fare media tra 2-3 punti
+        //mettere un controllo su outliers
+        //riempire i seguenti vector con la media dei tre punti
         x_extrap.push_back(x_filled_Stave[posoppmarker]+deltax);
         y_extrap.push_back(y_filled_Stave[posoppmarker]+deltay);
         z_extrap.push_back(z_filled_Stave[posoppmarker]+deltaz);
@@ -1218,6 +1286,8 @@ void DoInvisibleMarkerExtrapolation(int LeftOrRight, int &nextrap, std::vector<d
       y_extrap.push_back(-10000.);
       z_extrap.push_back(-10000.);
     }
+    isposcorner=false;
+    isnegcorner=false;
   }
 }
 
