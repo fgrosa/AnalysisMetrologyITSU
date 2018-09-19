@@ -24,18 +24,17 @@
 
 #endif
 
-const TString infilenames[] = {"/home/cecilia/Desktop/STAGE/StaveMetrology/STAVE2/Stave/STAVE_MARKERPOS_2018_1_12_T-OL-Stave-2_T-OL-HS-R-2_ALC-0312-01_047_T-OL-HS-L-2_ALC-0312-01-0178_MeasAndExtrap.root","/home/cecilia/Desktop/STAGE/StaveMetrology/STAVE3/Stave/STAVE_MARKERPOS_2018_3_26_T-OL-Stave-3_T-OL-HS-R-3_ALC-0312-01_180_T-OL-HS-L-3_ALC-0312-01_168_MeasAndExtrap.root","/home/cecilia/Desktop/STAGE/StaveMetrology/STAVE4/Stave/STAVE_MARKERPOS_2018_5_7_T-OL-Stave-4_T-OL-HS-R-4_ALC-0312-01_210_T-OL-HS-L-4_ALC-0312-01_246_MeasAndExtrap.root","/home/cecilia/Desktop/STAGE/StaveMetrology/STAVE5/Stave/STAVE_MARKERPOS_2018_6_6_T-OL-Stave-5_T-OL-HS-U-005_ALC-0312-01_109_T-OL-HS-L-005_ALC-0312-01_248_MeasAndExtrap.root","/home/cecilia/Desktop/STAGE/StaveMetrology/STAVE6/Stave/STAVE_MARKERPOS_2018_7_11_T-OL-Stave-006_ALC-0220-01_119_T-OL-HS-U-006_ALC-0312-01_260_T-OL-HS-L-006_ALC-0312-01_233_MeasAndExtrap.root","/home/cecilia/Desktop/STAGE/StaveMetrology/STAVE7/Stave/STAVE_MARKERPOS_2018_7_20_T-OL-Stave-007_ALC-0220-01_137_T-OL-HS-U-007_ALC-0312-01_253_T-OL-HS-L-007_ALC-0312-01_250_merged_MeasAndExtrap.root"};
-const int xaxistitle[] = {2,3,4,5,6,7};
+const int xaxistitle[] = {2,3,4,5,6,7,8,9};
 
-int PlotPlanarityVsHS();
+int PlotPlanarityVsHS(const char* _path="");
 void ComputePlanarityRMSandMean(TGraph* graph, double &planarity, double &zRMS, double &zmean);
 
-int PlotPlanarityVsHS() {
+int PlotPlanarityVsHS(const char* _path) {
 
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
 
-  const int nFiles = sizeof(infilenames)/sizeof(infilenames[0]);
+  const int nFiles = sizeof(xaxistitle)/sizeof(int);
   TGraph* gResToNomPlaneHSleft_Z[nFiles];
   TGraph* gResToNomPlaneHSright_Z[nFiles];
   TH1F* hResToNominalHSleft_X[nFiles];
@@ -61,8 +60,12 @@ int PlotPlanarityVsHS() {
   double RMSZ_StaveHSright[nFiles];
   double meanZ_StaveHSright[nFiles];
 
+  const TString sBasePath(_path);
   for(int iFile=0; iFile<nFiles; iFile++) {
-    TFile* infile = TFile::Open(infilenames[iFile].Data());
+    TString inFileName;
+    inFileName.Form("%s/Stave_%03d/T-OL-Stave-%03d_MeasAndExtrap.root", sBasePath.Data(), xaxistitle[iFile], xaxistitle[iFile]);
+    Printf("%s", inFileName.Data());
+    TFile* infile = TFile::Open(inFileName.Data());
     if(!infile) return -1;
     gResToNomPlaneHSleft_Z[iFile] = (TGraph*)infile->Get("gResToNomPlaneHSleft_Z");
     if(!gResToNomPlaneHSleft_Z[iFile]) return -2;
