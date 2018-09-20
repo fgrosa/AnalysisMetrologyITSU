@@ -504,7 +504,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
     hResToNominalStave_HSright_Y->Fill(y_FinalStave_HSright_restonominal[iEntry]);
   }
 
-  //compute Z residuals w.r.t. average plane and planarity
+  //compute Z residuals w.r.t. average and nominal planes and planarity
   //HS left
   TGraph* gResToNomPlaneHSleft_Z = new TGraph(x_HSleft.size());
   gResToNomPlaneHSleft_Z->SetName("gResToNomPlaneHSleft_Z");
@@ -530,21 +530,57 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   gResToNomPlaneHSleft_Z_negX->SetMarkerStyle(kFullCircle);
   gResToNomPlaneHSleft_Z_negX->SetMarkerSize(1.);
   gResToNomPlaneHSleft_Z_negX->SetMarkerColor(kBlue);
+  TGraph* gResToAvPlaneHSleft_Z = new TGraph(x_HSleft.size());
+  gResToAvPlaneHSleft_Z->SetName("gResToAvPlaneHSleft_Z");
+  gResToAvPlaneHSleft_Z->SetTitle("HSL planarity (bss metrology)");
+  gResToAvPlaneHSleft_Z->GetXaxis()->SetTitle("y (mm)");
+  gResToAvPlaneHSleft_Z->GetYaxis()->SetTitle("z_{meas} - z_{average plane} (#mum)");
+  gResToAvPlaneHSleft_Z->SetMarkerStyle(kFullCircle);
+  gResToAvPlaneHSleft_Z->SetMarkerSize(1.);
+  gResToAvPlaneHSleft_Z->SetMarkerColor(kBlack);
+  TGraph* gResToAvPlaneHSleft_Z_posX = new TGraph(0);
+  gResToAvPlaneHSleft_Z_posX->SetName("gResToAvPlaneHSleft_Z_posX");
+  gResToAvPlaneHSleft_Z_posX->SetTitle("HSL planarity (bss metrology) - pos X");
+  gResToAvPlaneHSleft_Z_posX->GetXaxis()->SetTitle("y (mm)");
+  gResToAvPlaneHSleft_Z_posX->GetYaxis()->SetTitle("z_{meas} - z_{average plane} (#mum)");
+  gResToAvPlaneHSleft_Z_posX->SetMarkerStyle(kFullCircle);
+  gResToAvPlaneHSleft_Z_posX->SetMarkerSize(1.);
+  gResToAvPlaneHSleft_Z_posX->SetMarkerColor(kRed);
+  TGraph* gResToAvPlaneHSleft_Z_negX = new TGraph(0);
+  gResToAvPlaneHSleft_Z_negX->SetName("gResToAvPlaneHSleft_Z_negX");
+  gResToAvPlaneHSleft_Z_negX->SetTitle("HSL planarity (bss metrology) - neg X");
+  gResToAvPlaneHSleft_Z_negX->GetXaxis()->SetTitle("y (mm)");
+  gResToAvPlaneHSleft_Z_negX->GetYaxis()->SetTitle("z_{meas} - z_{average plane} (#mum)");
+  gResToAvPlaneHSleft_Z_negX->SetMarkerStyle(kFullCircle);
+  gResToAvPlaneHSleft_Z_negX->SetMarkerSize(1.);
+  gResToAvPlaneHSleft_Z_negX->SetMarkerColor(kBlue);
+
   double planepars_base[3] = {0.41,0.,0.};
   int xposcounter=0;
   int xnegcounter=0;
   for(unsigned int iEntry=0; iEntry<x_HSleft.size(); iEntry++) {
-    double zres = ComputeResidualToPlane(x_HSleft[iEntry]+12.9,y_HSleft[iEntry],z_HSleft[iEntry],planepars_base);
-    gResToNomPlaneHSleft_Z->SetPoint(iEntry,y_HSleft[iEntry],zres*1000);
+    double zrestonominal = ComputeResidualToPlane(x_HSleft[iEntry]+12.9,y_HSleft[iEntry],z_HSleft[iEntry],planepars_base); 
+    double zrestoaverage = ComputeResidualToPlane(x_HSleft[iEntry]+12.9,y_HSleft[iEntry],z_HSleft[iEntry],fPlaneHSleft->GetParameters());
+    gResToNomPlaneHSleft_Z->SetPoint(iEntry,y_HSleft[iEntry],zrestonominal*1000);
+    gResToAvPlaneHSleft_Z->SetPoint(iEntry,y_HSleft[iEntry],zrestoaverage*1000);
     if(x_HSleft[iEntry]+12.9>0) {
-      gResToNomPlaneHSleft_Z_posX->SetPoint(xposcounter,y_HSleft[iEntry],zres*1000);
+      gResToNomPlaneHSleft_Z_posX->SetPoint(xposcounter,y_HSleft[iEntry],zrestonominal*1000);
+      gResToAvPlaneHSleft_Z_posX->SetPoint(xposcounter,y_HSleft[iEntry],zrestoaverage*1000);
       xposcounter++;
     }
     else {
-      gResToNomPlaneHSleft_Z_negX->SetPoint(xnegcounter,y_HSleft[iEntry],zres*1000);
+      gResToNomPlaneHSleft_Z_negX->SetPoint(xnegcounter,y_HSleft[iEntry],zrestonominal*1000);
+      gResToAvPlaneHSleft_Z_negX->SetPoint(xnegcounter,y_HSleft[iEntry],zrestoaverage*1000);
       xnegcounter++;
     }
   }
+  TF1* fAvPlaneHSleft_posX = new TF1("fAvPlaneHSleft_posX","pol1",-800,800);
+  fAvPlaneHSleft_posX->SetParameters((fPlaneHSleft->GetParameter(0)+fPlaneHSleft->GetParameter(1)*(14.999)-planepars_base[0])*1000,fPlaneHSleft->GetParameter(2)*1000);
+  fAvPlaneHSleft_posX->SetLineColor(kRed);
+  TF1* fAvPlaneHSleft_negX = new TF1("fAvPlaneHSleft_negX","pol1",-800,800);
+  fAvPlaneHSleft_negX->SetParameters((fPlaneHSleft->GetParameter(0)+fPlaneHSleft->GetParameter(1)*(-14.999)-planepars_base[0])*1000,fPlaneHSleft->GetParameter(2)*1000);
+  fAvPlaneHSleft_negX->SetLineColor(kBlue);
+
   //HS right
   TGraph* gResToNomPlaneHSright_Z = new TGraph(x_HSright.size());
   gResToNomPlaneHSright_Z->SetName("gResToNomPlaneHSright_Z");
@@ -570,20 +606,54 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   gResToNomPlaneHSright_Z_negX->SetMarkerStyle(kFullCircle);
   gResToNomPlaneHSright_Z_negX->SetMarkerSize(1.);
   gResToNomPlaneHSright_Z_negX->SetMarkerColor(kBlue);
+  TGraph* gResToAvPlaneHSright_Z = new TGraph(x_HSright.size());
+  gResToAvPlaneHSright_Z->SetName("gResToAvPlaneHSright_Z");
+  gResToAvPlaneHSright_Z->SetTitle("HSR planarity (bss metrology)");
+  gResToAvPlaneHSright_Z->GetXaxis()->SetTitle("y (mm)");
+  gResToAvPlaneHSright_Z->GetYaxis()->SetTitle("z_{meas} - z_{average plane} (#mum)");
+  gResToAvPlaneHSright_Z->SetMarkerStyle(kFullCircle);
+  gResToAvPlaneHSright_Z->SetMarkerSize(1.);
+  gResToAvPlaneHSright_Z->SetMarkerColor(kBlack);
+  TGraph* gResToAvPlaneHSright_Z_posX = new TGraph(0);
+  gResToAvPlaneHSright_Z_posX->SetName("gResToAvPlaneHSright_Z_posX");
+  gResToAvPlaneHSright_Z_posX->SetTitle("HSR planarity (bss metrology) - pos X");
+  gResToAvPlaneHSright_Z_posX->GetXaxis()->SetTitle("y (mm)");
+  gResToAvPlaneHSright_Z_posX->GetYaxis()->SetTitle("z_{meas} - z_{average plane} (#mum)");
+  gResToAvPlaneHSright_Z_posX->SetMarkerStyle(kFullCircle);
+  gResToAvPlaneHSright_Z_posX->SetMarkerSize(1.);
+  gResToAvPlaneHSright_Z_posX->SetMarkerColor(kRed);
+  TGraph* gResToAvPlaneHSright_Z_negX = new TGraph(0);
+  gResToAvPlaneHSright_Z_negX->SetName("gResToAvPlaneHSright_Z_negX");
+  gResToAvPlaneHSright_Z_negX->SetTitle("HSR planarity (bss metrology) - neg X");
+  gResToAvPlaneHSright_Z_negX->GetXaxis()->SetTitle("y (mm)");
+  gResToAvPlaneHSright_Z_negX->GetYaxis()->SetTitle("z_{meas} - z_{average plane} (#mum)");
+  gResToAvPlaneHSright_Z_negX->SetMarkerStyle(kFullCircle);
+  gResToAvPlaneHSright_Z_negX->SetMarkerSize(1.);
+  gResToAvPlaneHSright_Z_negX->SetMarkerColor(kBlue);
   xposcounter=0;
   xnegcounter=0;
   for(unsigned int iEntry=0; iEntry<x_HSright.size(); iEntry++) {
-    double zres = ComputeResidualToPlane(x_HSright[iEntry]-12.9,y_HSright[iEntry],z_HSright[iEntry],planepars_base);
-    gResToNomPlaneHSright_Z->SetPoint(iEntry,y_HSright[iEntry],zres*1000);
+    double zrestonominal = ComputeResidualToPlane(x_HSright[iEntry]-12.9,y_HSright[iEntry],z_HSright[iEntry],planepars_base);
+    double zresaverage = ComputeResidualToPlane(x_HSright[iEntry]-12.9,y_HSright[iEntry],z_HSright[iEntry],fPlaneHSright->GetParameters());
+    gResToNomPlaneHSright_Z->SetPoint(iEntry,y_HSright[iEntry],zrestonominal*1000);
+    gResToAvPlaneHSright_Z->SetPoint(iEntry,y_HSright[iEntry],zresaverage*1000);
     if(x_HSright[iEntry]-12.9>0) {
-      gResToNomPlaneHSright_Z_posX->SetPoint(xposcounter,y_HSright[iEntry],zres*1000);
+      gResToNomPlaneHSright_Z_posX->SetPoint(xposcounter,y_HSright[iEntry],zrestonominal*1000);
+      gResToAvPlaneHSright_Z_posX->SetPoint(xposcounter,y_HSright[iEntry],zresaverage*1000);
       xposcounter++;
     }
     else {
-      gResToNomPlaneHSright_Z_negX->SetPoint(xnegcounter,y_HSright[iEntry],zres*1000);
+      gResToNomPlaneHSright_Z_negX->SetPoint(xnegcounter,y_HSright[iEntry],zrestonominal*1000);
+      gResToAvPlaneHSright_Z_negX->SetPoint(xnegcounter,y_HSright[iEntry],zresaverage*1000);
       xnegcounter++;
     }
   }
+  TF1* fAvPlaneHSright_posX = new TF1("fAvPlaneHSright_posX","pol1",-800,800);
+  fAvPlaneHSright_posX->SetParameters((fPlaneHSright->GetParameter(0)+fPlaneHSright->GetParameter(1)*(14.999)-planepars_base[0])*1000,fPlaneHSright->GetParameter(2)*1000);
+  fAvPlaneHSright_posX->SetLineColor(kRed);
+  TF1* fAvPlaneHSright_negX = new TF1("fAvPlaneHSright_negX","pol1",-800,800);
+  fAvPlaneHSright_negX->SetParameters((fPlaneHSright->GetParameter(0)+fPlaneHSright->GetParameter(1)*(-14.999)-planepars_base[0])*1000,fPlaneHSright->GetParameter(2)*1000);
+  fAvPlaneHSright_negX->SetLineColor(kBlue);
 
   //HS left (final stave)
   TGraph* gResToNomPlaneStaveHSleft_Z = new TGraph(x_FinalStave_HSleft.size());
@@ -610,21 +680,55 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   gResToNomPlaneStaveHSleft_Z_negX->SetMarkerStyle(kFullCircle);
   gResToNomPlaneStaveHSleft_Z_negX->SetMarkerSize(1.);
   gResToNomPlaneStaveHSleft_Z_negX->SetMarkerColor(kBlue);
+  TGraph* gResToAvPlaneStaveHSleft_Z = new TGraph(x_FinalStave_HSleft.size());
+  gResToAvPlaneStaveHSleft_Z->SetName("gResToAvPlaneStaveHSleft_Z");
+  gResToAvPlaneStaveHSleft_Z->SetTitle("HSL planarity (final stave metrology)");
+  gResToAvPlaneStaveHSleft_Z->GetXaxis()->SetTitle("y (mm)");
+  gResToAvPlaneStaveHSleft_Z->GetYaxis()->SetTitle("z_{meas} - z_{average plane} (#mum)");
+  gResToAvPlaneStaveHSleft_Z->SetMarkerStyle(kFullCircle);
+  gResToAvPlaneStaveHSleft_Z->SetMarkerSize(1.);
+  gResToAvPlaneStaveHSleft_Z->SetMarkerColor(kBlack);
+  TGraph* gResToAvPlaneStaveHSleft_Z_posX = new TGraph(0);
+  gResToAvPlaneStaveHSleft_Z_posX->SetName("gResToAvPlaneStaveHSleft_Z_posX");
+  gResToAvPlaneStaveHSleft_Z_posX->SetTitle("HSL planarity (final stave metrology) - pos X");
+  gResToAvPlaneStaveHSleft_Z_posX->GetXaxis()->SetTitle("y (mm)");
+  gResToAvPlaneStaveHSleft_Z_posX->GetYaxis()->SetTitle("z_{meas} - z_{average plane} (#mum)");
+  gResToAvPlaneStaveHSleft_Z_posX->SetMarkerStyle(kFullCircle);
+  gResToAvPlaneStaveHSleft_Z_posX->SetMarkerSize(1.);
+  gResToAvPlaneStaveHSleft_Z_posX->SetMarkerColor(kRed);
+  TGraph* gResToAvPlaneStaveHSleft_Z_negX = new TGraph(0);
+  gResToAvPlaneStaveHSleft_Z_negX->SetName("gResToAvPlaneStaveHSleft_Z_negX");
+  gResToAvPlaneStaveHSleft_Z_negX->SetTitle("HSL planarity (final stave metrology) - neg X");
+  gResToAvPlaneStaveHSleft_Z_negX->GetXaxis()->SetTitle("y (mm)");
+  gResToAvPlaneStaveHSleft_Z_negX->GetYaxis()->SetTitle("z_{meas} - z_{average plane} (#mum)");
+  gResToAvPlaneStaveHSleft_Z_negX->SetMarkerStyle(kFullCircle);
+  gResToAvPlaneStaveHSleft_Z_negX->SetMarkerSize(1.);
+  gResToAvPlaneStaveHSleft_Z_negX->SetMarkerColor(kBlue);
   double planepars_HSleft[3] = {13.27,0.,0.};
   xposcounter=0;
   xnegcounter=0;
   for(unsigned int iEntry=0; iEntry<x_FinalStave_HSleft.size(); iEntry++) {
-    double zres = ComputeResidualToPlane(x_FinalStave_HSleft[iEntry],y_FinalStave_HSleft[iEntry],z_FinalStave_HSleft[iEntry],planepars_HSleft);
-    gResToNomPlaneStaveHSleft_Z->SetPoint(iEntry,y_FinalStave_HSleft[iEntry],zres*1000);
+    double zrestonominal = ComputeResidualToPlane(x_FinalStave_HSleft[iEntry],y_FinalStave_HSleft[iEntry],z_FinalStave_HSleft[iEntry],planepars_HSleft);
+    double zrestoaverage = ComputeResidualToPlane(x_FinalStave_HSleft[iEntry],y_FinalStave_HSleft[iEntry],z_FinalStave_HSleft[iEntry],fPlaneStaveHSleft->GetParameters());
+    gResToNomPlaneStaveHSleft_Z->SetPoint(iEntry,y_FinalStave_HSleft[iEntry],zrestonominal*1000);
+    gResToAvPlaneStaveHSleft_Z->SetPoint(iEntry,y_FinalStave_HSleft[iEntry],zrestoaverage*1000);
     if(x_FinalStave_HSleft[iEntry]>0) {
-      gResToNomPlaneStaveHSleft_Z_posX->SetPoint(xposcounter,y_FinalStave_HSleft[iEntry],zres*1000);
+      gResToNomPlaneStaveHSleft_Z_posX->SetPoint(xposcounter,y_FinalStave_HSleft[iEntry],zrestonominal*1000);
+      gResToAvPlaneStaveHSleft_Z_posX->SetPoint(xposcounter,y_FinalStave_HSleft[iEntry],zrestoaverage*1000);
       xposcounter++;
     }
     else {
-      gResToNomPlaneStaveHSleft_Z_negX->SetPoint(xnegcounter,y_FinalStave_HSleft[iEntry],zres*1000);
+      gResToNomPlaneStaveHSleft_Z_negX->SetPoint(xnegcounter,y_FinalStave_HSleft[iEntry],zrestonominal*1000);
+      gResToAvPlaneStaveHSleft_Z_negX->SetPoint(xnegcounter,y_FinalStave_HSleft[iEntry],zrestoaverage*1000);
       xnegcounter++;
     }
   }
+  TF1* fAvPlaneStaveHSleft_posX = new TF1("fAvPlaneStaveHSleft_posX","pol1",-800,800);
+  fAvPlaneStaveHSleft_posX->SetParameters((fPlaneStaveHSleft->GetParameter(0)+fPlaneStaveHSleft->GetParameter(1)*(2.099)-planepars_HSleft[0])*1000,fPlaneStaveHSleft->GetParameter(2)*1000);
+  fAvPlaneStaveHSleft_posX->SetLineColor(kRed);
+  TF1* fAvPlaneStaveHSleft_negX = new TF1("fAvPlaneStaveHSleft_negX","pol1",-800,800);
+  fAvPlaneStaveHSleft_negX->SetParameters((fPlaneStaveHSleft->GetParameter(0)+fPlaneStaveHSleft->GetParameter(1)*(-27.899)-planepars_HSleft[0])*1000,fPlaneStaveHSleft->GetParameter(2)*1000);
+  fAvPlaneStaveHSleft_negX->SetLineColor(kBlue);
 
   //HS right (final stave)
   TGraph* gResToNomPlaneStaveHSright_Z = new TGraph(x_FinalStave_HSright.size());
@@ -635,11 +739,24 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   gResToNomPlaneStaveHSright_Z->SetMarkerStyle(kFullCircle);
   gResToNomPlaneStaveHSright_Z->SetMarkerSize(1.);
   gResToNomPlaneStaveHSright_Z->SetMarkerColor(kBlack);
+  TGraph* gResToAvPlaneStaveHSright_Z = new TGraph(x_FinalStave_HSright.size());
+  gResToAvPlaneStaveHSright_Z->SetName("gResToAvPlaneStaveHSright_Z");
+  gResToAvPlaneStaveHSright_Z->SetTitle("HSR planarity (final stave metrology)");
+  gResToAvPlaneStaveHSright_Z->GetXaxis()->SetTitle("y (mm)");
+  gResToAvPlaneStaveHSright_Z->GetYaxis()->SetTitle("z_{meas} - z_{average plane} (#mum)");
+  gResToAvPlaneStaveHSright_Z->SetMarkerStyle(kFullCircle);
+  gResToAvPlaneStaveHSright_Z->SetMarkerSize(1.);
+  gResToAvPlaneStaveHSright_Z->SetMarkerColor(kBlack);
   double planepars_HSright[3] = {9.67,0.,0.};
   for(unsigned int iEntry=0; iEntry<x_FinalStave_HSright.size(); iEntry++) {
-    double zres = ComputeResidualToPlane(x_FinalStave_HSright[iEntry],y_FinalStave_HSright[iEntry],z_FinalStave_HSright[iEntry],planepars_HSright);
-    gResToNomPlaneStaveHSright_Z->SetPoint(iEntry,y_FinalStave_HSright[iEntry],zres*1000);
+    double zrestonominal = ComputeResidualToPlane(x_FinalStave_HSright[iEntry],y_FinalStave_HSright[iEntry],z_FinalStave_HSright[iEntry],planepars_HSright);
+    double zrestoaverage = ComputeResidualToPlane(x_FinalStave_HSright[iEntry],y_FinalStave_HSright[iEntry],z_FinalStave_HSright[iEntry],fPlaneStaveHSright->GetParameters());
+    gResToNomPlaneStaveHSright_Z->SetPoint(iEntry,y_FinalStave_HSright[iEntry],zrestonominal*1000);
+    gResToAvPlaneStaveHSright_Z->SetPoint(iEntry,y_FinalStave_HSright[iEntry],zrestoaverage*1000);
   }
+  TF1* fAvPlaneStaveHSright = new TF1("fAvPlaneStaveHSright","pol1",-800,800);
+  fAvPlaneStaveHSright->SetParameters((fPlaneStaveHSright->GetParameter(0)+fPlaneStaveHSright->GetParameter(1)*(27.899)-planepars_HSright[0])*1000,fPlaneStaveHSright->GetParameter(2)*1000);
+  fAvPlaneStaveHSright->SetLineColor(kBlack);
 
   //extrapolate position of markers that are not visible in the last metrology survey from the measurements of the two HS (before U-arms)
   std::vector<double> x_extrap_HSleft;
@@ -734,23 +851,28 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   legStave->AddEntry(gStaveMeas,"Measured","p");
   legStave->AddEntry(gStaveExtrap,"Extrapolated","p");
 
-  TLegend* legHS_X = new TLegend(0.7,0.725,0.85,0.825);
+  TLegend* legHS_X = new TLegend(0.6,0.675,0.85,0.875);
   legHS_X->SetTextSize(0.045);
   legHS_X->AddEntry(gResToNomPlaneHSright_Z_posX,"x = 15 mm","p");
   legHS_X->AddEntry(gResToNomPlaneHSright_Z_negX,"x = -15 mm","p");
+  legHS_X->AddEntry(fAvPlaneHSright_posX,"average plane x = 15 mm","l");
+  legHS_X->AddEntry(fAvPlaneHSright_negX,"average plane x = -15 mm","l");
 
-  TLegend* legStaveHSL_X = new TLegend(0.7,0.725,0.85,0.825);
+  TLegend* legStaveHSL_X = new TLegend(0.6,0.675,0.85,0.875);
   legStaveHSL_X->SetTextSize(0.045);
   legStaveHSL_X->AddEntry(gResToNomPlaneStaveHSleft_Z_posX,"x = 2 mm","p");
   legStaveHSL_X->AddEntry(gResToNomPlaneStaveHSleft_Z_negX,"x = -28 mm","p");
+  legStaveHSL_X->AddEntry(fAvPlaneStaveHSleft_posX,"average plane x = 2 mm","l");
+  legStaveHSL_X->AddEntry(fAvPlaneStaveHSleft_negX,"average plane x = -28 mm","l");
 
-  TLegend* legStaveHSR_X = new TLegend(0.7,0.725,0.85,0.825);
+  TLegend* legStaveHSR_X = new TLegend(0.6,0.675,0.85,0.875);
   legStaveHSR_X->SetTextSize(0.045);
   legStaveHSR_X->AddEntry(gResToNomPlaneStaveHSright_Z,"x = 28 mm","p");
+  legStaveHSR_X->AddEntry(fAvPlaneStaveHSright,"average plane x = 28 mm","l");
 
   TPaveText* text[4];
   for(int iText=0; iText<4; iText++) {
-    text[iText] = new TPaveText(0.2,0.7,0.4,0.85,"NDC");
+    text[iText] = new TPaveText(0.15,0.7,0.45,0.85,"NDC");
     text[iText]->SetTextSize(0.045);
     text[iText]->SetTextColor(kBlack);
     text[iText]->SetTextFont(42);
@@ -772,11 +894,14 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   gResToNomPlaneHSleft_Z->Draw("AP");
   gResToNomPlaneHSleft_Z_posX->Draw("P");
   gResToNomPlaneHSleft_Z_negX->Draw("P");
-  double planarity=0, mean=0, RMS=0;
-  ComputePlanarityRMSandMean(gResToNomPlaneHSleft_Z,planarity,RMS,mean);
-  text[0]->AddText(Form("planarity = %0.1f #mum",planarity));
-  text[0]->AddText(Form("RMS = %0.1f #mum",RMS));
-  text[0]->AddText(Form("mean = %0.1f #mum",mean));
+  fAvPlaneHSleft_posX->Draw("same");
+  fAvPlaneHSleft_negX->Draw("same");
+  double planaritytonominal=0, meantonominal=0, RMStonominal=0, planaritytoaverage=0, meantoaverage=0, RMStoaverage=0;
+  ComputePlanarityRMSandMean(gResToNomPlaneHSleft_Z,planaritytonominal,RMStonominal,meantonominal);
+  ComputePlanarityRMSandMean(gResToAvPlaneHSleft_Z,planaritytoaverage,RMStoaverage,meantoaverage);
+  text[0]->AddText(Form("planarity (to average) = %0.1f #mum",planaritytoaverage));
+  text[0]->AddText(Form("RMS (to average) = %0.1f #mum",RMStoaverage));
+  text[0]->AddText(Form("shift (to nominal)  = %0.1f #mum",meantonominal));
   text[0]->Draw("same");
   legHS_X->Draw("same");
   cHSleft_plan->Update();
@@ -787,10 +912,13 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   gResToNomPlaneHSright_Z->Draw("AP");
   gResToNomPlaneHSright_Z_posX->Draw("P");
   gResToNomPlaneHSright_Z_negX->Draw("P");
-  ComputePlanarityRMSandMean(gResToNomPlaneHSright_Z,planarity,RMS,mean);
-  text[1]->AddText(Form("planarity = %0.1f #mum",planarity));
-  text[1]->AddText(Form("RMS = %0.1f #mum",RMS));
-  text[1]->AddText(Form("mean = %0.1f #mum",mean));
+  fAvPlaneHSright_posX->Draw("same");
+  fAvPlaneHSright_negX->Draw("same");
+  ComputePlanarityRMSandMean(gResToNomPlaneHSright_Z,planaritytonominal,RMStonominal,meantonominal);
+  ComputePlanarityRMSandMean(gResToAvPlaneHSright_Z,planaritytoaverage,RMStoaverage,meantoaverage);
+  text[1]->AddText(Form("planarity (to average) = %0.1f #mum",planaritytoaverage));
+  text[1]->AddText(Form("RMS (to average) = %0.1f #mum",RMStoaverage));
+  text[1]->AddText(Form("mean (to nominal) = %0.1f #mum",meantonominal));
   text[1]->Draw("same");
   legHS_X->Draw("same");
   cHSright_plan->Update();
@@ -821,26 +949,31 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
 
   TCanvas*& cStaveHSleft_plan = fCanvas[5];
   cStaveHSleft_plan->cd();
-  gResToNomPlaneStaveHSleft_Z->GetYaxis()->SetRangeUser(-500,500);
+  gResToNomPlaneStaveHSleft_Z->GetYaxis()->SetRangeUser(-800,800);
   gResToNomPlaneStaveHSleft_Z->Draw("AP");
   gResToNomPlaneStaveHSleft_Z_posX->Draw("P");
   gResToNomPlaneStaveHSleft_Z_negX->Draw("P");
-  ComputePlanarityRMSandMean(gResToNomPlaneStaveHSleft_Z,planarity,RMS,mean);
-  text[2]->AddText(Form("planarity = %0.1f #mum",planarity));
-  text[2]->AddText(Form("RMS = %0.1f #mum",RMS));
-  text[2]->AddText(Form("mean = %0.1f #mum",mean));
+  fAvPlaneStaveHSleft_posX->Draw("same");
+  fAvPlaneStaveHSleft_negX->Draw("same");
+  ComputePlanarityRMSandMean(gResToNomPlaneStaveHSleft_Z,planaritytonominal,RMStonominal,meantonominal);
+  ComputePlanarityRMSandMean(gResToAvPlaneStaveHSleft_Z,planaritytoaverage,RMStoaverage,meantoaverage);
+  text[2]->AddText(Form("planarity (to average) = %0.1f #mum",planaritytoaverage));
+  text[2]->AddText(Form("RMS (to average) = %0.1f #mum",RMStoaverage));
+  text[2]->AddText(Form("mean (to nominal) = %0.1f #mum",meantonominal));
   text[2]->Draw("same");
   legStaveHSL_X->Draw("same");
   cStaveHSleft_plan->Update();
 
   TCanvas*& cStaveHSright_plan = fCanvas[6];
   cStaveHSright_plan->cd();
-  gResToNomPlaneStaveHSright_Z->GetYaxis()->SetRangeUser(-500.,500);
+  gResToNomPlaneStaveHSright_Z->GetYaxis()->SetRangeUser(-800,800);
   gResToNomPlaneStaveHSright_Z->Draw("AP");
-  ComputePlanarityRMSandMean(gResToNomPlaneStaveHSright_Z,planarity,RMS,mean);
-  text[3]->AddText(Form("planarity = %0.1f #mum",planarity));
-  text[3]->AddText(Form("RMS = %0.1f #mum",RMS));
-  text[3]->AddText(Form("mean = %0.1f #mum",mean));
+  fAvPlaneStaveHSright->Draw("same");
+  ComputePlanarityRMSandMean(gResToNomPlaneStaveHSright_Z,planaritytonominal,RMStonominal,meantonominal);
+  ComputePlanarityRMSandMean(gResToAvPlaneStaveHSright_Z,planaritytoaverage,RMStoaverage,meantoaverage);
+  text[3]->AddText(Form("planarity (to average) = %0.1f #mum",planaritytoaverage));
+  text[3]->AddText(Form("RMS (to average) = %0.1f #mum",RMStoaverage));
+  text[3]->AddText(Form("mean (to nominal) = %0.1f #mum",meantonominal));
   text[3]->Draw("same");
   legStaveHSR_X->Draw("same");
   cStaveHSright_plan->Update();
@@ -874,9 +1007,9 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   //Save output files
   //dat file with extrapolated values
   TString outfilenamedat = infilename_FinalStave;
-  outfilenamedat.ReplaceAll(".dat","_MeasAndExtrap.dat");
-  outfilenamedat.ReplaceAll(".txt","_MeasAndExtrap.txt");
-  outfilenamedat.ReplaceAll(".csv","_MeasAndExtrap.csv");
+  outfilenamedat.ReplaceAll(".dat","_MeasAndExtrap_fix.dat");
+  outfilenamedat.ReplaceAll(".txt","_MeasAndExtrap_fix.txt");
+  outfilenamedat.ReplaceAll(".csv","_MeasAndExtrap_fix.csv");
   CreateDatFile(outfilenamedat.Data(),x_FinalStave_MeasPlusExtr,y_FinalStave_MeasPlusExtr,z_FinalStave_MeasPlusExtr);
 
   //root file with QA plots
@@ -904,6 +1037,12 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   gResToNomPlaneHSright_Z->Write();
   gResToNomPlaneHSright_Z_posX->Write();
   gResToNomPlaneHSright_Z_posX->Write();
+  gResToAvPlaneHSleft_Z->Write();
+  gResToAvPlaneHSleft_Z_posX->Write();
+  gResToAvPlaneHSleft_Z_negX->Write();
+  gResToAvPlaneHSright_Z->Write();
+  gResToAvPlaneHSright_Z_posX->Write();
+  gResToAvPlaneHSright_Z_posX->Write();
   hResToNominalHSleft_X->Write();
   hResToNominalHSleft_Y->Write();
   hResToNominalHSright_X->Write();
@@ -913,6 +1052,10 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   gResToNomPlaneStaveHSleft_Z_posX->Write();
   gResToNomPlaneStaveHSleft_Z_negX->Write();
   gResToNomPlaneStaveHSright_Z->Write();
+  gResToAvPlaneStaveHSleft_Z->Write();
+  gResToAvPlaneStaveHSleft_Z_posX->Write();
+  gResToAvPlaneStaveHSleft_Z_negX->Write();
+  gResToAvPlaneStaveHSright_Z->Write();
   hResToNominalStave_HSleft_X->Write();
   hResToNominalStave_HSleft_Y->Write();
   hResToNominalStave_HSright_X->Write();
@@ -1229,12 +1372,11 @@ void DoInvisibleMarkerExtrapolation(int LeftOrRight, int &nextrap, std::vector<d
     if((LeftOrRight==MainFrame::kHSL && x_nominal[iEntry]>0) || (LeftOrRight==MainFrame::kHSR && x_nominal[iEntry]<0)) {
       int posoppmarker = FindOppositeNominalMarkerPosition(x_nominal[iEntry],y_nominal[iEntry],x_nominal,y_nominal);
 
-      //vogliamo cercare se iEntry è all'interno di modcornmarkers
       it = find(modposcornermarkers.begin(), modposcornermarkers.end(), iEntry);
-      if(it!=modposcornermarkers.end()) isposcorner=true; //l'ha trovato.
+      if(it!=modposcornermarkers.end()) isposcorner=true;
       if(!isposcorner) {        
         it = find(modnegcornermarkers.begin(), modnegcornermarkers.end(), iEntry);
-        if(it!=modnegcornermarkers.end()) isnegcorner=true; //l'ha trovato.
+        if(it!=modnegcornermarkers.end()) isnegcorner=true;
       }
 
       const int noppmarkers=3;
@@ -1250,36 +1392,69 @@ void DoInvisibleMarkerExtrapolation(int LeftOrRight, int &nextrap, std::vector<d
         oppmarkarray[2] = posoppmarker-2;
       }
 
-      //inizio loop for per calcolo 3 punti (=noppmarkers) estrapolati
-      if(x_filled_HS[posoppmarker]!=-10000 && x_filled_HS[iEntry]!=-10000 && x_filled_Stave[posoppmarker]!=-10000) {
-        double deltax = x_filled_HS[iEntry]-x_filled_HS[posoppmarker];
-        double deltay = y_filled_HS[iEntry]-y_filled_HS[posoppmarker];
-        double deltaz = z_filled_HS[iEntry]-z_filled_HS[posoppmarker];
-        if(correctfortilt) {
-          double z_HS_base = parsHSplane[1]*x_filled_HS[iEntry]+parsHSplane[2]*y_filled_HS[iEntry];
-          double xtrasl_SF = 12.9;
-          if(LeftOrRight==MainFrame::kHSR) xtrasl_SF=-12.9;
-          double z_HS_SF = z_HS_SF=parsStaveplane[1]*x_filled_HS[iEntry]+parsStaveplane[2]*y_filled_HS[iEntry]-parsStaveplane[1]*xtrasl_SF;
-          double tiltcorrection = z_HS_base-z_HS_SF;
-          deltaz+=tiltcorrection;
-        }
 
-        //calcolare i 3 punti estrapolati (e.g. x_filled_Stave[posoppmarker]+deltax)
-        //fine loop for per calcolo dei 2-3 punti estrapolati
+  	  double deltax[noppmarkers] = {0,0,0};
+  	  double deltay[noppmarkers]= {0,0,0};
+  	  double deltaz[noppmarkers]= {0,0,0};
 
-        //fare media tra 2-3 punti
-        //mettere un controllo su outliers
-        //riempire i seguenti vector con la media dei tre punti
-        x_extrap.push_back(x_filled_Stave[posoppmarker]+deltax);
-        y_extrap.push_back(y_filled_Stave[posoppmarker]+deltay);
-        z_extrap.push_back(z_filled_Stave[posoppmarker]+deltaz);
-        nextrap++;
+      double rawexrap_x[noppmarkers] = {-10000,-10000,-10000};
+      double rawexrap_y[noppmarkers] = {-10000,-10000,-10000};
+      double rawexrap_z[noppmarkers] = {-10000,-10000,-10000};
+
+  	  for (int j=0; j<noppmarkers; j++) {
+        //inizio loop for per calcolo 3 punti (=noppmarkers) estrapolati
+        if(x_filled_HS[oppmarkarray[j]]!=-10000 && x_filled_HS[iEntry]!=-10000 && x_filled_Stave[oppmarkarray[j]]!=-10000) {
+          deltax[j]= x_filled_HS[iEntry]-x_filled_HS[oppmarkarray[j]];
+          deltay[j] = y_filled_HS[iEntry]-y_filled_HS[oppmarkarray[j]];// come uso iEntry bene ? 
+     			deltaz[j] = z_filled_HS[iEntry]-z_filled_HS[oppmarkarray[j]];		
+          if(correctfortilt) {
+            double z_HS_base = parsHSplane[1]*x_filled_HS[iEntry]+parsHSplane[2]*y_filled_HS[iEntry];
+            double xtrasl_SF = 12.9;
+            if(LeftOrRight==MainFrame::kHSR) xtrasl_SF=-12.9;
+            double z_HS_SF = z_HS_SF=parsStaveplane[1]*x_filled_HS[iEntry]+parsStaveplane[2]*y_filled_HS[iEntry]-parsStaveplane[1]*xtrasl_SF;
+            double tiltcorrection = z_HS_base-z_HS_SF;
+            deltaz[j]+=tiltcorrection;
+    		  }
+		      rawexrap_x[j]=x_filled_Stave[oppmarkarray[j]]+deltax[j];
+			    rawexrap_y[j]=y_filled_Stave[oppmarkarray[j]]+deltay[j];
+			    rawexrap_z[j]=z_filled_Stave[oppmarkarray[j]]+deltaz[j];	
+		    }
+	    }
+
+      double sumextrapolation_x=0;
+      double sumextrapolation_y=0;
+      double sumextrapolation_z=0;
+      int countpoint=0; 
+        
+      if(!((TMath::Abs(rawexrap_x[0]-rawexrap_x[1])>0.2 && TMath::Abs(rawexrap_x[0]-rawexrap_x[2])>0.2) || (TMath::Abs(rawexrap_y[0]-rawexrap_y[1])>0.2 && TMath::Abs(rawexrap_y[0]-rawexrap_y[2])>0.2) || (TMath::Abs(rawexrap_z[0]-rawexrap_z[1])>0.2 && TMath::Abs(rawexrap_z[2]-rawexrap_z[2])>0.2))) {  
+				sumextrapolation_x+=rawexrap_x[0];
+				sumextrapolation_y+=rawexrap_y[0];
+				sumextrapolation_z+=rawexrap_z[0];
+				countpoint++;
+			}
+      if(!((TMath::Abs(rawexrap_x[1]-rawexrap_x[0])>0.2 && TMath::Abs(rawexrap_x[1]-rawexrap_x[2])>0.2) || (TMath::Abs(rawexrap_y[1]-rawexrap_y[0])>0.2 && TMath::Abs(rawexrap_y[1]-rawexrap_y[2])>0.2) || (TMath::Abs(rawexrap_z[1]-rawexrap_z[0])>0.2 && TMath::Abs(rawexrap_z[1]-rawexrap_z[2])>0.2))) {  
+				sumextrapolation_x+=rawexrap_x[1];
+				sumextrapolation_y+=rawexrap_y[1];
+				sumextrapolation_z+=rawexrap_z[1];
+				countpoint++;
+			}
+      if(!((TMath::Abs(rawexrap_x[2]-rawexrap_x[0])>0.2 && TMath::Abs(rawexrap_x[1]-rawexrap_x[2])>0.2) || (TMath::Abs(rawexrap_y[2]-rawexrap_y[0])>0.2 && TMath::Abs(rawexrap_y[1]-rawexrap_y[2])>0.2) || (TMath::Abs(rawexrap_z[2]-rawexrap_z[0])>0.2 && TMath::Abs(rawexrap_z[1]-rawexrap_z[2])>0.2))) {  
+        sumextrapolation_x+=rawexrap_x[2];
+        sumextrapolation_y+=rawexrap_y[2];
+        sumextrapolation_z+=rawexrap_z[2];
+        countpoint++;
       }
-      else {
-        x_extrap.push_back(-10000.);
-        y_extrap.push_back(-10000.);
-        z_extrap.push_back(-10000.);
-      }
+			if(countpoint==0){ //if all the three distant from each other, use the first
+				sumextrapolation_x+=rawexrap_x[0];
+				sumextrapolation_y+=rawexrap_y[0];
+				sumextrapolation_z+=rawexrap_z[0];
+				countpoint=1;
+			}
+
+      x_extrap.push_back(sumextrapolation_x/countpoint);
+      y_extrap.push_back(sumextrapolation_y/countpoint);
+      z_extrap.push_back(sumextrapolation_z/countpoint);
+      nextrap++;
     }
     else {
       x_extrap.push_back(-10000.);
