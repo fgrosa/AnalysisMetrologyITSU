@@ -560,7 +560,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   int xposcounter=0;
   int xnegcounter=0;
   for(unsigned int iEntry=0; iEntry<x_HSleft.size(); iEntry++) {
-    double zrestonominal = ComputeResidualToPlane(x_HSleft[iEntry]+12.9,y_HSleft[iEntry],z_HSleft[iEntry],planepars_base); 
+    double zrestonominal = ComputeResidualToPlane(x_HSleft[iEntry]+12.9,y_HSleft[iEntry],z_HSleft[iEntry],planepars_base);
     double zrestoaverage = ComputeResidualToPlane(x_HSleft[iEntry]+12.9,y_HSleft[iEntry],z_HSleft[iEntry],fPlaneHSleft->GetParameters());
     gResToNomPlaneHSleft_Z->SetPoint(iEntry,y_HSleft[iEntry],zrestonominal*1000);
     gResToAvPlaneHSleft_Z->SetPoint(iEntry,y_HSleft[iEntry],zrestoaverage*1000);
@@ -852,28 +852,29 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   legStave->AddEntry(gStaveMeas,"Measured","p");
   legStave->AddEntry(gStaveExtrap,"Extrapolated","p");
 
-  TLegend* legHS_X = new TLegend(0.6,0.675,0.85,0.875);
+  Double_t x1 = .57, y1 = .68, x2 = .93, y2 = .87;
+  TLegend* legHS_X = new TLegend(x1,y1,x2,y2);
   legHS_X->SetTextSize(0.045);
   legHS_X->AddEntry(gResToNomPlaneHSright_Z_posX,"x = 15 mm","p");
   legHS_X->AddEntry(gResToNomPlaneHSright_Z_negX,"x = -15 mm","p");
   legHS_X->AddEntry(fAvPlaneHSright_posX,"average plane x = 15 mm","l");
   legHS_X->AddEntry(fAvPlaneHSright_negX,"average plane x = -15 mm","l");
 
-  TLegend* legStaveHSL_X = new TLegend(0.6,0.675,0.85,0.875);
+  TLegend* legStaveHSL_X = new TLegend(x1,y1,x2,y2);
   legStaveHSL_X->SetTextSize(0.045);
   legStaveHSL_X->AddEntry(gResToNomPlaneStaveHSleft_Z_posX,"x = 2 mm","p");
   legStaveHSL_X->AddEntry(gResToNomPlaneStaveHSleft_Z_negX,"x = -28 mm","p");
   legStaveHSL_X->AddEntry(fAvPlaneStaveHSleft_posX,"average plane x = 2 mm","l");
   legStaveHSL_X->AddEntry(fAvPlaneStaveHSleft_negX,"average plane x = -28 mm","l");
 
-  TLegend* legStaveHSR_X = new TLegend(0.6,0.675,0.85,0.875);
+  TLegend* legStaveHSR_X = new TLegend(x1,y1,x2,y2);
   legStaveHSR_X->SetTextSize(0.045);
   legStaveHSR_X->AddEntry(gResToNomPlaneStaveHSright_Z,"x = 28 mm","p");
   legStaveHSR_X->AddEntry(fAvPlaneStaveHSright,"average plane x = 28 mm","l");
 
   TPaveText* text[4];
   for(int iText=0; iText<4; iText++) {
-    text[iText] = new TPaveText(0.15,0.7,0.45,0.85,"NDC");
+    text[iText] = new TPaveText(0.15,0.7,0.53,0.85,"NDC");
     text[iText]->SetTextSize(0.045);
     text[iText]->SetTextColor(kBlack);
     text[iText]->SetTextFont(42);
@@ -891,7 +892,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
 
   TCanvas*& cHSleft_plan = fCanvas[1];
   cHSleft_plan->cd();
-  gResToNomPlaneHSleft_Z->GetYaxis()->SetRangeUser(-500.,500);
+  gResToNomPlaneHSleft_Z->GetYaxis()->SetRangeUser(-500.,800);
   gResToNomPlaneHSleft_Z->Draw("AP");
   gResToNomPlaneHSleft_Z_posX->Draw("P");
   gResToNomPlaneHSleft_Z_negX->Draw("P");
@@ -909,7 +910,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
 
   TCanvas*& cHSright_plan = fCanvas[2];
   cHSright_plan->cd();
-  gResToNomPlaneHSright_Z->GetYaxis()->SetRangeUser(-500.,500);
+  gResToNomPlaneHSright_Z->GetYaxis()->SetRangeUser(-500.,800);
   gResToNomPlaneHSright_Z->Draw("AP");
   gResToNomPlaneHSright_Z_posX->Draw("P");
   gResToNomPlaneHSright_Z_negX->Draw("P");
@@ -1329,11 +1330,11 @@ bool PrintMatchedCoordinates(std::vector<double> xmeas, std::vector<double> ymea
 
 //______________________________________________________________________________________________
 void DoInvisibleMarkerExtrapolation(int LeftOrRight, int &nextrap, std::vector<double> x_nominal, std::vector<double> y_nominal, std::vector<double> x_filled_HS, std::vector<double> y_filled_HS, std::vector<double> z_filled_HS, std::vector<double> x_filled_Stave, std::vector<double> y_filled_Stave, std::vector<double> z_filled_Stave, std::vector<double>& x_extrap, std::vector<double>& y_extrap, std::vector<double>& z_extrap, bool correctfortilt, double* parsHSplane, double* parsStaveplane) {
-  
+
   //positions of initial markers in std::vector
   std::vector<unsigned int>  modposcornermarkers;
   std::vector<unsigned int>  modnegcornermarkers;
-  
+
   modnegcornermarkers.push_back(14);
   modnegcornermarkers.push_back(27);
   modnegcornermarkers.push_back(42);
@@ -1375,7 +1376,7 @@ void DoInvisibleMarkerExtrapolation(int LeftOrRight, int &nextrap, std::vector<d
 
       it = find(modposcornermarkers.begin(), modposcornermarkers.end(), iEntry);
       if(it!=modposcornermarkers.end()) isposcorner=true;
-      if(!isposcorner) {        
+      if(!isposcorner) {
         it = find(modnegcornermarkers.begin(), modnegcornermarkers.end(), iEntry);
         if(it!=modnegcornermarkers.end()) isnegcorner=true;
       }
@@ -1405,7 +1406,7 @@ void DoInvisibleMarkerExtrapolation(int LeftOrRight, int &nextrap, std::vector<d
         if(x_filled_HS[oppmarkarray[j]]!=-10000 && x_filled_HS[iEntry]!=-10000 && x_filled_Stave[oppmarkarray[j]]!=-10000) {
           deltax[j]= x_filled_HS[iEntry]-x_filled_HS[oppmarkarray[j]];
           deltay[j] = y_filled_HS[iEntry]-y_filled_HS[oppmarkarray[j]];
-     			deltaz[j] = z_filled_HS[iEntry]-z_filled_HS[oppmarkarray[j]];		
+     			deltaz[j] = z_filled_HS[iEntry]-z_filled_HS[oppmarkarray[j]];
           if(correctfortilt) {
             double z_HS_base = parsHSplane[1]*x_filled_HS[iEntry]+parsHSplane[2]*y_filled_HS[iEntry];
             double xtrasl_SF = 12.9;
@@ -1416,28 +1417,28 @@ void DoInvisibleMarkerExtrapolation(int LeftOrRight, int &nextrap, std::vector<d
     		  }
 		      rawexrap_x[j]=x_filled_Stave[oppmarkarray[j]]+deltax[j];
 			    rawexrap_y[j]=y_filled_Stave[oppmarkarray[j]]+deltay[j];
-			    rawexrap_z[j]=z_filled_Stave[oppmarkarray[j]]+deltaz[j];	
+			    rawexrap_z[j]=z_filled_Stave[oppmarkarray[j]]+deltaz[j];
 		    }
 	    }
 
       double sumextrapolation_x=0;
       double sumextrapolation_y=0;
       double sumextrapolation_z=0;
-      int countpoint=0; 
-        
-      if(!((TMath::Abs(rawexrap_x[0]-rawexrap_x[1])>0.2 && TMath::Abs(rawexrap_x[0]-rawexrap_x[2])>0.2) || (TMath::Abs(rawexrap_y[0]-rawexrap_y[1])>0.2 && TMath::Abs(rawexrap_y[0]-rawexrap_y[2])>0.2) || (TMath::Abs(rawexrap_z[0]-rawexrap_z[1])>0.2 && TMath::Abs(rawexrap_z[2]-rawexrap_z[2])>0.2))) {  
+      int countpoint=0;
+
+      if(!((TMath::Abs(rawexrap_x[0]-rawexrap_x[1])>0.2 && TMath::Abs(rawexrap_x[0]-rawexrap_x[2])>0.2) || (TMath::Abs(rawexrap_y[0]-rawexrap_y[1])>0.2 && TMath::Abs(rawexrap_y[0]-rawexrap_y[2])>0.2) || (TMath::Abs(rawexrap_z[0]-rawexrap_z[1])>0.2 && TMath::Abs(rawexrap_z[2]-rawexrap_z[2])>0.2))) {
 				sumextrapolation_x+=rawexrap_x[0];
 				sumextrapolation_y+=rawexrap_y[0];
 				sumextrapolation_z+=rawexrap_z[0];
 				countpoint++;
 			}
-      if(!((TMath::Abs(rawexrap_x[1]-rawexrap_x[0])>0.2 && TMath::Abs(rawexrap_x[1]-rawexrap_x[2])>0.2) || (TMath::Abs(rawexrap_y[1]-rawexrap_y[0])>0.2 && TMath::Abs(rawexrap_y[1]-rawexrap_y[2])>0.2) || (TMath::Abs(rawexrap_z[1]-rawexrap_z[0])>0.2 && TMath::Abs(rawexrap_z[1]-rawexrap_z[2])>0.2))) {  
+      if(!((TMath::Abs(rawexrap_x[1]-rawexrap_x[0])>0.2 && TMath::Abs(rawexrap_x[1]-rawexrap_x[2])>0.2) || (TMath::Abs(rawexrap_y[1]-rawexrap_y[0])>0.2 && TMath::Abs(rawexrap_y[1]-rawexrap_y[2])>0.2) || (TMath::Abs(rawexrap_z[1]-rawexrap_z[0])>0.2 && TMath::Abs(rawexrap_z[1]-rawexrap_z[2])>0.2))) {
 				sumextrapolation_x+=rawexrap_x[1];
 				sumextrapolation_y+=rawexrap_y[1];
 				sumextrapolation_z+=rawexrap_z[1];
 				countpoint++;
 			}
-      if(!((TMath::Abs(rawexrap_x[2]-rawexrap_x[0])>0.2 && TMath::Abs(rawexrap_x[1]-rawexrap_x[2])>0.2) || (TMath::Abs(rawexrap_y[2]-rawexrap_y[0])>0.2 && TMath::Abs(rawexrap_y[1]-rawexrap_y[2])>0.2) || (TMath::Abs(rawexrap_z[2]-rawexrap_z[0])>0.2 && TMath::Abs(rawexrap_z[1]-rawexrap_z[2])>0.2))) {  
+      if(!((TMath::Abs(rawexrap_x[2]-rawexrap_x[0])>0.2 && TMath::Abs(rawexrap_x[1]-rawexrap_x[2])>0.2) || (TMath::Abs(rawexrap_y[2]-rawexrap_y[0])>0.2 && TMath::Abs(rawexrap_y[1]-rawexrap_y[2])>0.2) || (TMath::Abs(rawexrap_z[2]-rawexrap_z[0])>0.2 && TMath::Abs(rawexrap_z[1]-rawexrap_z[2])>0.2))) {
         sumextrapolation_x+=rawexrap_x[2];
         sumextrapolation_y+=rawexrap_y[2];
         sumextrapolation_z+=rawexrap_z[2];
