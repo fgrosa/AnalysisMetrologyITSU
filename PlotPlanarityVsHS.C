@@ -24,7 +24,8 @@
 
 #endif
 
-const int xaxistitle[] = {2,3,4,5,6,7,8,9};
+const int xaxistitle[] = {4,5,6,7,8,9,10};
+//const int xaxistitle[] = {2,3,4,5,6,7,8,9};
 
 int PlotPlanarityVsHS(const char* _path="");
 void ComputePlanarityRMSandMean(TGraph* graph, double &planarity, double &zRMS, double &zmean);
@@ -63,7 +64,7 @@ int PlotPlanarityVsHS(const char* _path) {
   const TString sBasePath(_path);
   for(int iFile=0; iFile<nFiles; iFile++) {
     TString inFileName;
-    inFileName.Form("%s/Stave_%03d/T-OL-Stave-%03d_MeasAndExtrap.root", sBasePath.Data(), xaxistitle[iFile], xaxistitle[iFile]);
+    inFileName.Form("%s/T-OL-Stave-%03d_MeasAndExtrap.root", sBasePath.Data(), xaxistitle[iFile]);
     Printf("%s", inFileName.Data());
     TFile* infile = TFile::Open(inFileName.Data());
     if(!infile) return -1;
