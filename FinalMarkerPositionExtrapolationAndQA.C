@@ -1393,8 +1393,6 @@ void DoInvisibleMarkerExtrapolation(int LeftOrRight, int &nextrap, std::vector<d
         oppmarkarray[2] = posoppmarker+2;
       }
 
-      cout << "Extrap point number: " << iEntry << "  " << oppmarkarray[0] << "  "<< oppmarkarray[1] << "  " << oppmarkarray[2]<< endl;
-
   	  double deltax[noppmarkers] = {0,0,0};
   	  double deltay[noppmarkers]= {0,0,0};
   	  double deltaz[noppmarkers]= {0,0,0};
@@ -1419,8 +1417,6 @@ void DoInvisibleMarkerExtrapolation(int LeftOrRight, int &nextrap, std::vector<d
 		      rawexrap_x[j]=x_filled_Stave[oppmarkarray[j]]+deltax[j];
 			    rawexrap_y[j]=y_filled_Stave[oppmarkarray[j]]+deltay[j];
 			    rawexrap_z[j]=z_filled_Stave[oppmarkarray[j]]+deltaz[j];	
-
-          cout << rawexrap_x[j] << "  " << rawexrap_y[j] << "  " << rawexrap_z[j] << endl;
 		    }
 	    }
 
