@@ -410,7 +410,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
 
   FillVectorsOfMatchedPositions(x_FinalStave_HSright,y_FinalStave_HSright,z_FinalStave_HSright,x_HSright_nominal,y_HSright_nominal,x_FinalStave_HSright_filled,y_FinalStave_HSright_filled,z_FinalStave_HSright_filled,x_FinalStave_HSright_restonominal,y_FinalStave_HSright_restonominal);
 
-  std::cout << "\n\n\n\n**************************************** HSL final metrology on Meas ******************************************" << std::endl;
+  std::cout << "\n\n\n\n**************************************** HSR final metrology on Meas ******************************************" << std::endl;
   okmatch = PrintMatchedCoordinates(x_FinalStave_HSright_filled,y_FinalStave_HSright_filled,x_HSright_nominal,y_HSright_nominal,0.);
   if(!okmatch) {return -1;}
   std::cout << "\nNumber of measured markers: " << x_FinalStave_HSright.size() << ", Number of not measured markers: " << x_FinalStave_HSright_filled.size() - x_FinalStave_HSright.size() << std::endl;
@@ -421,6 +421,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   TF2* fPlaneHSright = new TF2("fPlaneHSright","[0]+[1]*x+[2]*y",-15,15,-1000,1000);
   TF2* fPlaneStaveHSleft = new TF2("fPlaneStaveHSleft","[0]+[1]*x+[2]*y",-30,5,-1000,1000);
   TF2* fPlaneStaveHSright = new TF2("fPlaneStaveHSright","[0]+[1]*x+[2]*y",-5,30,-1000,1000);
+  fPlaneStaveHSright->FixParameter(1,0); //only one set of points for one x -> no degree of freedom in x
 
   //HS left
   TGraph2D* gHSleftMeas = new TGraph2D(x_HSleft.size());
@@ -1007,9 +1008,9 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   //Save output files
   //dat file with extrapolated values
   TString outfilenamedat = infilename_FinalStave;
-  outfilenamedat.ReplaceAll(".dat","_MeasAndExtrap_fix.dat");
-  outfilenamedat.ReplaceAll(".txt","_MeasAndExtrap_fix.txt");
-  outfilenamedat.ReplaceAll(".csv","_MeasAndExtrap_fix.csv");
+  outfilenamedat.ReplaceAll(".dat","_MeasAndExtrap.dat");
+  outfilenamedat.ReplaceAll(".txt","_MeasAndExtrap.txt");
+  outfilenamedat.ReplaceAll(".csv","_MeasAndExtrap.csv");
   CreateDatFile(outfilenamedat.Data(),x_FinalStave_MeasPlusExtr,y_FinalStave_MeasPlusExtr,z_FinalStave_MeasPlusExtr);
 
   //root file with QA plots
@@ -1036,13 +1037,13 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   gResToNomPlaneHSleft_Z_negX->Write();
   gResToNomPlaneHSright_Z->Write();
   gResToNomPlaneHSright_Z_posX->Write();
-  gResToNomPlaneHSright_Z_posX->Write();
+  gResToNomPlaneHSright_Z_negX->Write();
   gResToAvPlaneHSleft_Z->Write();
   gResToAvPlaneHSleft_Z_posX->Write();
   gResToAvPlaneHSleft_Z_negX->Write();
   gResToAvPlaneHSright_Z->Write();
   gResToAvPlaneHSright_Z_posX->Write();
-  gResToAvPlaneHSright_Z_posX->Write();
+  gResToAvPlaneHSright_Z_negX->Write();
   hResToNominalHSleft_X->Write();
   hResToNominalHSleft_Y->Write();
   hResToNominalHSright_X->Write();
@@ -1383,15 +1384,16 @@ void DoInvisibleMarkerExtrapolation(int LeftOrRight, int &nextrap, std::vector<d
       int oppmarkarray[noppmarkers] = {posoppmarker-1,posoppmarker,posoppmarker+1};
       if(isposcorner) {
         oppmarkarray[0] = posoppmarker;
-        oppmarkarray[1] = posoppmarker+1;
-        oppmarkarray[2] = posoppmarker+2;
-      }
-      else if(isnegcorner) {
-        oppmarkarray[0] = posoppmarker;
         oppmarkarray[1] = posoppmarker-1;
         oppmarkarray[2] = posoppmarker-2;
       }
+      else if(isnegcorner) {
+        oppmarkarray[0] = posoppmarker;
+        oppmarkarray[1] = posoppmarker+1;
+        oppmarkarray[2] = posoppmarker+2;
+      }
 
+      cout << "Extrap point number: " << iEntry << "  " << oppmarkarray[0] << "  "<< oppmarkarray[1] << "  " << oppmarkarray[2]<< endl;
 
   	  double deltax[noppmarkers] = {0,0,0};
   	  double deltay[noppmarkers]= {0,0,0};
@@ -1402,10 +1404,9 @@ void DoInvisibleMarkerExtrapolation(int LeftOrRight, int &nextrap, std::vector<d
       double rawexrap_z[noppmarkers] = {-10000,-10000,-10000};
 
   	  for (int j=0; j<noppmarkers; j++) {
-        //inizio loop for per calcolo 3 punti (=noppmarkers) estrapolati
         if(x_filled_HS[oppmarkarray[j]]!=-10000 && x_filled_HS[iEntry]!=-10000 && x_filled_Stave[oppmarkarray[j]]!=-10000) {
           deltax[j]= x_filled_HS[iEntry]-x_filled_HS[oppmarkarray[j]];
-          deltay[j] = y_filled_HS[iEntry]-y_filled_HS[oppmarkarray[j]];// come uso iEntry bene ? 
+          deltay[j] = y_filled_HS[iEntry]-y_filled_HS[oppmarkarray[j]];
      			deltaz[j] = z_filled_HS[iEntry]-z_filled_HS[oppmarkarray[j]];		
           if(correctfortilt) {
             double z_HS_base = parsHSplane[1]*x_filled_HS[iEntry]+parsHSplane[2]*y_filled_HS[iEntry];
@@ -1418,6 +1419,8 @@ void DoInvisibleMarkerExtrapolation(int LeftOrRight, int &nextrap, std::vector<d
 		      rawexrap_x[j]=x_filled_Stave[oppmarkarray[j]]+deltax[j];
 			    rawexrap_y[j]=y_filled_Stave[oppmarkarray[j]]+deltay[j];
 			    rawexrap_z[j]=z_filled_Stave[oppmarkarray[j]]+deltaz[j];	
+
+          cout << rawexrap_x[j] << "  " << rawexrap_y[j] << "  " << rawexrap_z[j] << endl;
 		    }
 	    }
 
