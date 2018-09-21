@@ -24,7 +24,7 @@
 
 #endif
 
-const int xaxistitle[] = {4,5,6,7,8,9};
+const int xaxistitle[] = {4,5,6,7,8,9,10};
 //const int xaxistitle[] = {2,3,4,5,6,7,8,9};
 
 int PlotPlanarityVsHS(const char* _path="");
