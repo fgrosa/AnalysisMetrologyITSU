@@ -559,9 +559,11 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   double planepars_base[3] = {0.41,0.,0.};
   int xposcounter=0;
   int xnegcounter=0;
+  double deltazmax_HSL=0;
   for(unsigned int iEntry=0; iEntry<x_HSleft.size(); iEntry++) {
     double zrestonominal = ComputeResidualToPlane(x_HSleft[iEntry]+12.9,y_HSleft[iEntry],z_HSleft[iEntry],planepars_base);
     double zrestoaverage = ComputeResidualToPlane(x_HSleft[iEntry]+12.9,y_HSleft[iEntry],z_HSleft[iEntry],fPlaneHSleft->GetParameters());
+    if(TMath::Abs(zrestonominal)>deltazmax_HSL) deltazmax_HSL=TMath::Abs(zrestonominal);
     gResToNomPlaneHSleft_Z->SetPoint(iEntry,y_HSleft[iEntry],zrestonominal*1000);
     gResToAvPlaneHSleft_Z->SetPoint(iEntry,y_HSleft[iEntry],zrestoaverage*1000);
     if(x_HSleft[iEntry]+12.9>0) {
@@ -633,9 +635,11 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   gResToAvPlaneHSright_Z_negX->SetMarkerColor(kBlue);
   xposcounter=0;
   xnegcounter=0;
+  double deltazmax_HSR=0;
   for(unsigned int iEntry=0; iEntry<x_HSright.size(); iEntry++) {
     double zrestonominal = ComputeResidualToPlane(x_HSright[iEntry]-12.9,y_HSright[iEntry],z_HSright[iEntry],planepars_base);
     double zresaverage = ComputeResidualToPlane(x_HSright[iEntry]-12.9,y_HSright[iEntry],z_HSright[iEntry],fPlaneHSright->GetParameters());
+    if(TMath::Abs(zrestonominal)>deltazmax_HSR) deltazmax_HSR=TMath::Abs(zrestonominal);
     gResToNomPlaneHSright_Z->SetPoint(iEntry,y_HSright[iEntry],zrestonominal*1000);
     gResToAvPlaneHSright_Z->SetPoint(iEntry,y_HSright[iEntry],zresaverage*1000);
     if(x_HSright[iEntry]-12.9>0) {
@@ -708,9 +712,11 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   double planepars_HSleft[3] = {13.27,0.,0.};
   xposcounter=0;
   xnegcounter=0;
+  double deltazmax_stave_HSL=0;
   for(unsigned int iEntry=0; iEntry<x_FinalStave_HSleft.size(); iEntry++) {
     double zrestonominal = ComputeResidualToPlane(x_FinalStave_HSleft[iEntry],y_FinalStave_HSleft[iEntry],z_FinalStave_HSleft[iEntry],planepars_HSleft);
     double zrestoaverage = ComputeResidualToPlane(x_FinalStave_HSleft[iEntry],y_FinalStave_HSleft[iEntry],z_FinalStave_HSleft[iEntry],fPlaneStaveHSleft->GetParameters());
+    if(TMath::Abs(zrestonominal)>deltazmax_stave_HSL) deltazmax_stave_HSL=TMath::Abs(zrestonominal);
     gResToNomPlaneStaveHSleft_Z->SetPoint(iEntry,y_FinalStave_HSleft[iEntry],zrestonominal*1000);
     gResToAvPlaneStaveHSleft_Z->SetPoint(iEntry,y_FinalStave_HSleft[iEntry],zrestoaverage*1000);
     if(x_FinalStave_HSleft[iEntry]>0) {
@@ -749,9 +755,11 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   gResToAvPlaneStaveHSright_Z->SetMarkerSize(1.);
   gResToAvPlaneStaveHSright_Z->SetMarkerColor(kBlack);
   double planepars_HSright[3] = {9.67,0.,0.};
+  double deltazmax_stave_HSR=0;
   for(unsigned int iEntry=0; iEntry<x_FinalStave_HSright.size(); iEntry++) {
     double zrestonominal = ComputeResidualToPlane(x_FinalStave_HSright[iEntry],y_FinalStave_HSright[iEntry],z_FinalStave_HSright[iEntry],planepars_HSright);
     double zrestoaverage = ComputeResidualToPlane(x_FinalStave_HSright[iEntry],y_FinalStave_HSright[iEntry],z_FinalStave_HSright[iEntry],fPlaneStaveHSright->GetParameters());
+    if(TMath::Abs(zrestonominal)>deltazmax_stave_HSR) deltazmax_stave_HSR=TMath::Abs(zrestonominal);
     gResToNomPlaneStaveHSright_Z->SetPoint(iEntry,y_FinalStave_HSright[iEntry],zrestonominal*1000);
     gResToAvPlaneStaveHSright_Z->SetPoint(iEntry,y_FinalStave_HSright[iEntry],zrestoaverage*1000);
   }
@@ -852,7 +860,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   legStave->AddEntry(gStaveMeas,"Measured","p");
   legStave->AddEntry(gStaveExtrap,"Extrapolated","p");
 
-  Double_t x1 = .57, y1 = .68, x2 = .93, y2 = .87;
+  Double_t x1 = .57, y1 = .65, x2 = .93, y2 = .85;
   TLegend* legHS_X = new TLegend(x1,y1,x2,y2);
   legHS_X->SetTextSize(0.045);
   legHS_X->AddEntry(gResToNomPlaneHSright_Z_posX,"x = 15 mm","p");
@@ -874,7 +882,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
 
   TPaveText* text[4];
   for(int iText=0; iText<4; iText++) {
-    text[iText] = new TPaveText(0.15,0.7,0.53,0.85,"NDC");
+    text[iText] = new TPaveText(0.15,0.65,0.53,0.85,"NDC");
     text[iText]->SetTextSize(0.045);
     text[iText]->SetTextColor(kBlack);
     text[iText]->SetTextFont(42);
@@ -904,6 +912,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   text[0]->AddText(Form("planarity (to average) = %0.1f #mum",planaritytoaverage));
   text[0]->AddText(Form("RMS (to average) = %0.1f #mum",RMStoaverage));
   text[0]->AddText(Form("shift (to nominal)  = %0.1f #mum",meantonominal));
+  text[0]->AddText(Form("Max #DeltaZ (to nominal) = %0.1f #mum",deltazmax_HSL*1000));
   text[0]->Draw("same");
   legHS_X->Draw("same");
   cHSleft_plan->Update();
@@ -921,6 +930,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   text[1]->AddText(Form("planarity (to average) = %0.1f #mum",planaritytoaverage));
   text[1]->AddText(Form("RMS (to average) = %0.1f #mum",RMStoaverage));
   text[1]->AddText(Form("mean (to nominal) = %0.1f #mum",meantonominal));
+  text[1]->AddText(Form("Max #DeltaZ (to nominal) = %0.1f #mum",deltazmax_HSR*1000));
   text[1]->Draw("same");
   legHS_X->Draw("same");
   cHSright_plan->Update();
@@ -962,6 +972,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   text[2]->AddText(Form("planarity (to average) = %0.1f #mum",planaritytoaverage));
   text[2]->AddText(Form("RMS (to average) = %0.1f #mum",RMStoaverage));
   text[2]->AddText(Form("mean (to nominal) = %0.1f #mum",meantonominal));
+  text[2]->AddText(Form("Max #DeltaZ (to nominal) = %0.1f #mum",deltazmax_stave_HSL*1000));
   text[2]->Draw("same");
   legStaveHSL_X->Draw("same");
   cStaveHSleft_plan->Update();
@@ -976,6 +987,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
   text[3]->AddText(Form("planarity (to average) = %0.1f #mum",planaritytoaverage));
   text[3]->AddText(Form("RMS (to average) = %0.1f #mum",RMStoaverage));
   text[3]->AddText(Form("mean (to nominal) = %0.1f #mum",meantonominal));
+  text[3]->AddText(Form("Max #DeltaZ (to nominal) = %0.1f #mum",deltazmax_stave_HSR*1000));
   text[3]->Draw("same");
   legStaveHSR_X->Draw("same");
   cStaveHSright_plan->Update();
