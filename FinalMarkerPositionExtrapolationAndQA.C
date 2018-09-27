@@ -47,8 +47,8 @@
 //_____________________________________________________________________________________________
 //METHOD PROTOTYPES
 
-void FinalMarkerPositionExtrapolationAndQA();
-int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSright, TString infilename_FinalStave, TString initdir, TCanvas** fCanvas);
+void FinalMarkerPositionExtrapolationAndQA(const bool _fileFromCMM=true);
+int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSright, TString infilename_FinalStave, TString initdir, bool _fileFromCMM, TCanvas** fCanvas);
 bool ReadDatFile(TString FileName, std::vector<double>& x, std::vector<double>& y, std::vector<double>& z, double xoffset=0.);
 bool ReadDatFileMitutoyo(TString FileName, std::vector<double>& x, std::vector<double>& y, std::vector<double>& z, double xoffset=0.);
 void CreateDatFile(TString FileName, std::vector<double>& x, std::vector<double>& y, std::vector<double>& z);
@@ -112,11 +112,12 @@ class MainFrame {
   TString               fFileNameStave;
   TString               fInitDir;
   TRootEmbeddedCanvas*  fEcanvas;
+  bool                  fIsFileFromCMM;
 
  public:
    enum HStype{kHSL, kHSR, kStave};
 
-  MainFrame(const TGWindow* p, unsigned int w, unsigned int h);
+  MainFrame(const TGWindow* p, unsigned int w, unsigned int h, const bool _isFromCMM);
   virtual ~MainFrame();
   TString GetFileName(int ftype) {
     if(ftype==kHSL)        return fFileNameHSL;
@@ -131,7 +132,8 @@ class MainFrame {
 };
 
 //_______________________________________________________________________________
-MainFrame::MainFrame(const TGWindow* p, unsigned int w, unsigned int h):
+MainFrame::MainFrame(const TGWindow* p, unsigned int w, unsigned int h, const bool _isFromCMM):
+  fIsFileFromCMM(_isFromCMM),
   fFileNameHSL("."),
   fFileNameHSR("."),
   fFileNameStave(".")
@@ -279,38 +281,38 @@ int MainFrame::DoMetrologyAndExtrapolation()
   fMain->Resize(fMain->GetDefaultSize());
   fMain->MapWindow();
 
-  return MetrologyAndExtrapolation(fFileNameHSL,fFileNameHSR,fFileNameStave,fInitDir,fCanvas);
+  return MetrologyAndExtrapolation(fFileNameHSL,fFileNameHSR,fFileNameStave,fInitDir,fIsFileFromCMM,fCanvas);
 }
 
 //_______________________________________________________________________________
 //METHOD IMPLEMENTATION
-void FinalMarkerPositionExtrapolationAndQA()
+void FinalMarkerPositionExtrapolationAndQA(const bool _fileFromCMM)
 {
-  new MainFrame(gClient->GetRoot(), 200, 200);
+  new MainFrame(gClient->GetRoot(), 200, 200, _fileFromCMM);
 }
 
 //_____________________________________________________________________________________________
-int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSright, TString infilename_FinalStave, TString initdir, TCanvas** fCanvas) {
+int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSright, TString infilename_FinalStave, TString initdir, bool _fileFromCMM, TCanvas** fCanvas) {
 
   //load measured marker positions HS_left BEFORE U-ARMS
   std::vector<double> x_HSleft;
   std::vector<double> y_HSleft;
   std::vector<double> z_HSleft;
-  bool loadfile = ReadDatFileMitutoyo(infilename_HSleft,x_HSleft,y_HSleft,z_HSleft,-12.9);
+  bool loadfile = _fileFromCMM ? ReadDatFileMitutoyo(infilename_HSleft,x_HSleft,y_HSleft,z_HSleft,-12.9) : ReadDatFile(infilename_HSleft,x_HSleft,y_HSleft,z_HSleft,-12.9);
   if(!loadfile) {return 1;}
 
   //load measured marker positions HS_right BEFORE U-ARMS
   std::vector<double> x_HSright;
   std::vector<double> y_HSright;
   std::vector<double> z_HSright;
-  loadfile=ReadDatFileMitutoyo(infilename_HSright,x_HSright,y_HSright,z_HSright,12.9);
+  loadfile = _fileFromCMM ? ReadDatFileMitutoyo(infilename_HSright,x_HSright,y_HSright,z_HSright,12.9) : ReadDatFile(infilename_HSright,x_HSright,y_HSright,z_HSright,12.9);
   if(!loadfile) {return 2;}
 
   //load measured marker positions Final Stave Metrology
   std::vector<double> x_FinalStave;
   std::vector<double> y_FinalStave;
   std::vector<double> z_FinalStave;
-  loadfile=ReadDatFileMitutoyo(infilename_FinalStave,x_FinalStave,y_FinalStave,z_FinalStave);
+  loadfile = _fileFromCMM ? ReadDatFileMitutoyo(infilename_FinalStave,x_FinalStave,y_FinalStave,z_FinalStave) : ReadDatFile(infilename_FinalStave,x_FinalStave,y_FinalStave,z_FinalStave);
   if(!loadfile) {return 3;}
 
   //divide final positions in HSleft and HSright
