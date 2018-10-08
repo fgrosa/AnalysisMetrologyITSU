@@ -175,7 +175,7 @@ int Show_CPPlanarity_HSPlane(const char* flname, EType _type)
   c->SaveAs(Form("%s.pdf", prefix_fl_name.Data()));
 
   TFile* root_fl = TFile::Open(Form("%s.root", prefix_fl_name.Data()), "recreate");
-  for(int iPlot=0; iPlot<nPlot; ++iPlot)  {
+  for(unsigned int iPlot=0; iPlot<nPlot; ++iPlot)  {
     graph[iPlot]->Write();
   }
 
