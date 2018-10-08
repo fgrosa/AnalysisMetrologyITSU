@@ -179,7 +179,7 @@ int Measure_Planarity(const char* flname)
   unsigned int iPoint[nXcoord];
   for(int iX=0; iX<nXcoord; iX++) {iPoint[iX]=0;}
   unsigned int counter=0;
-  for(unsigned int iEntry=0; iEntry<nPoints; iEntry++) {
+  for(unsigned int iEntry=0; iEntry<(unsigned int)nPoints; iEntry++) {
 
     zcorr.push_back(z[iEntry]-(para+parb*x[iEntry]+parc*y[iEntry]));
 
