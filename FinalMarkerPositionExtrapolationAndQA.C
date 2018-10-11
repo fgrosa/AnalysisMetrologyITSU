@@ -816,7 +816,7 @@ int MetrologyAndExtrapolation(TString infilename_HSleft, TString infilename_HSri
 
   //Fill graphs / histograms
   //extrapolated measurements
-  TGraph2D* gStaveExtrap = new TGraph2D(nextrap_right+nextrap_left);
+  TGraph2D* gStaveExtrap = new TGraph2D(1);
   gStaveExtrap->SetName("gStaveExtrap");
   gStaveExtrap->SetMarkerStyle(kFullSquare);
   gStaveExtrap->SetMarkerColor(kRed);
